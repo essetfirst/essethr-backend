@@ -1,4 +1,6 @@
-const { ObjectID } = require("mongodb");
+const { min } = require("moment/moment");
+const { ObjectID,ObjectId } = require("mongodb");
+const { all } = require("../routes/employee.route");
 const { LeaveAllowanceDAO } = require("./leaveDAO");
 
 let employees;
@@ -20,6 +22,8 @@ let employees;
  *
  */
 
+
+  
 /**
  * @typedef AddressInfo
  * @property {String} state
@@ -134,6 +138,12 @@ class EmployeeDAO {
     }
   }
 
+  /**
+   *
+   * @param employeeInfo EmployeeInfo
+   *
+   *
+   */
   static async createEmployee(employeeInfo) {
     try {
       // Save employee to database
@@ -141,7 +151,9 @@ class EmployeeDAO {
       console.log(employee);
 
       // Allocate/Accrue leave entitlement/allowance to new employee
-      await LeaveAllowanceDAO.allocateAllowance({ employeeId: employee.insertedId });
+      await LeaveAllowanceDAO.allocateAllowance({
+        employeeId: employee.insertedId,
+      });
 
       return employee;
     } catch (e) {
@@ -150,11 +162,16 @@ class EmployeeDAO {
     }
   }
 
-  static async getEmployees(filterCriteria = {}) {
+  /**
+   *
+   * @param filterCriteria Page Limit
+   *
+   */
+  static async getEmployees(filterCriteria={}) {
     try {
       const { org, page, limit } = filterCriteria;
       let query = {};
-
+      console.log(filterCriteria);
       if (org) {
         query["org"] = ObjectID(org);
       }
@@ -165,9 +182,9 @@ class EmployeeDAO {
           ? { _id: { $in: aEmployees } }
           : query;
 
-      // console.log("\nQuery: \n", query);
+      console.log("\nQuery: \n", query);
       let findPipeline = employees.find(query);
-
+      console.log(findPipeline)
       if (limit) {
         findPipeline = findPipeline.limit(limit);
       }
@@ -440,6 +457,52 @@ class EmployeeDAO {
       return { error: e };
     }
   }
+
+  static async searchEmployee(employeeInfo) {
+    try {
+      //   const query = employeeInfo;
+      console.log(employeeInfo);
+      const data = await employees.findOne(employeeInfo);
+        console.log("MOl");
+      // console.log(JSON.stringify(data));
+      return data;
+    } catch (e) {
+      console.error(`Unable to fetch employee by id, ${e}`);
+      return { error: e };
+    }
+  }
+
+  static async filterEmployee(employeeInfo) {
+    try {
+      let { department, gender, position, minSalary, maxSalary, org } =
+        employeeInfo;
+      console.log(employeeInfo);
+      var salary
+      if (minSalary) {
+        salary={$gte:minSalary}
+      }
+      if (maxSalary) {
+        salary = {$lte:maxSalary}
+      }
+      if (minSalary && maxSalary) {
+        salary ={$gte:minSalary,$lte:maxSalary}
+      }
+
+      const query = {
+        org:ObjectID(org),
+        gender: gender ? gender : { $ne: null },
+        department: department ? department : { $ne: null },
+        position: position ? position : { $ne: null },
+        salary,
+      };
+      console.log(query);
+      return await employees.find(query);
+    } catch (e) {
+      console.error(`Unable to fetch employee by id, ${e}`);
+      return { error: e };
+    }
+  }
+
 }
 
 module.exports = EmployeeDAO;

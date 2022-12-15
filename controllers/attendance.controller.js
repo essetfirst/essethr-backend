@@ -3,11 +3,11 @@ const AttendanceDAO = require("../dao/attendanceDAO");
 
 class AttendanceController {
   static async apiGetAttendances(req, res) {
-    const filter = req.query;
-    const result = await AttendanceDAO.getAttendances({
-      ...filter,
+    const filter = {
       orgId: req.org,
-    });
+    };
+    console.log(filter);
+    const result = await AttendanceDAO.getAttendances(filter);
 
     if (result.error) {
       return res.status(result.server ? 500 : 400).json({
@@ -22,7 +22,26 @@ class AttendanceController {
       attendance: result,
     });
   }
+  static async apiGetTodayAttendance(req, res) {
+    const filter = {
+      orgId: req.org,
+    };
+    const result = await AttendanceDAO.getTodayAttendances(filter);
+    console.log(result);
 
+    if (result.error) {
+      return res.status(result.server ? 500 : 400).json({
+        success: false,
+        error: result.server ? "Something went wrong." : result.error,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      total_results: result.length,
+      attendance: result,
+    });
+  }
   static async apiSwipe(req, res) {
     const result = await AttendanceDAO.swipe({ orgId: req.org, ...req.body });
 
@@ -183,9 +202,17 @@ class AttendanceController {
   }
 
   static async apiGetReport(req, res) {
+    // const result = await AttendanceDAO.getReport({
+    //   ...req.query,
+    //   org: req.org,
+    // });
+    console.log(req.query);
+    // console.log(req.org);
+
     const result = await AttendanceDAO.getReport({
-      ...req.query,
-      org: req.org,
+      orgId: String(req.org),
+      from: "2021-10-21",
+      to: "2021-10-26",
     });
 
     if (result.error) {
@@ -198,6 +225,48 @@ class AttendanceController {
     return res.json({
       success: true,
       report: result,
+    });
+  }
+  static async apiImportAttendace(req, res) {
+    const file = req.file;
+    const result = await AttendanceDAO.importAttendance({
+      filename: file.path,
+    });
+    console.log(result);
+    if (!result) {
+      return res.status(result ? 500 : 400).json({
+        success: false,
+        error: "Error Importing Attendance",
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      message: ` Attendace Rows Imported Successfully !`,
+    });
+  }
+  static async apiExportAttendace(req, res) {
+    const result = await AttendanceDAO.exportAttendance({
+      orgId: req.org,
+      employees: [],
+      fromDate: "2021-10-21",
+      toDate: "2021-10-26",
+      from: "2021-10-21",
+      to: "2021-10-26",
+    });
+
+    console.log(result);
+
+    if (!result) {
+      return res.status(result ? 500 : 400).json({
+        success: false,
+        error: "Something went wrong.",
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      message: ` Attendace  Exported Successfully !`,
     });
   }
 }

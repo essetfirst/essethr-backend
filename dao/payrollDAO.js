@@ -71,6 +71,7 @@ class PayrollDAO {
           $lte: new Date(toDate || to).toISOString().slice(0, 10),
         };
       }
+      console.log(query)
       const pipeline = [
         { $match: query },
         {
@@ -117,9 +118,10 @@ class PayrollDAO {
     }
   }
 
-  static async updatePayroll({ payrollId, ...rest } = {}) {
+  static async updatePayroll( filterInfo = {}) {
     try {
-      const query = { _id: ObjectID(payrollId) };
+      const {_id,...rest} = filterInfo
+      const query = { _id: ObjectID(_id) };
       const update = { $set: { ...rest } };
 
       return await payrolls.updateOne(query, update);

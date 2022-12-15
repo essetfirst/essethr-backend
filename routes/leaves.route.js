@@ -16,6 +16,6 @@ router
   .get(LeaveCtrl.apiGetLeaveById)
   .put(LeaveCtrl.apiUpdateLeave)
   .delete(LeaveCtrl.apiDeleteLeave);
-
+router.route("/export/:org").get(LeaveCtrl.apiExportLeaves)
 
 module.exports = router;

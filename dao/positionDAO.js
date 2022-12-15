@@ -32,8 +32,9 @@ class PositionDAO {
   static async getPositions(filterCriteria = {}) {
     try {
       const { org, department, ...rest } = filterCriteria;
+      // console.log(filterCriteria)
       let query = {
-        org: org ? ObjectID(org) : { $exists: true },
+        org: org ? String(org) : { $exists: true },
         department: department ? ObjectID(department) : { $exists: true },
         ...rest,
       };

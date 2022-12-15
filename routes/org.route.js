@@ -67,7 +67,7 @@ router
 .post(HolidayCtrl.apiAddHoliday);
 
 router
-.route("/:org/leave-types/:id")
+.route("/:org/holidays/:id")
 .get(HolidayCtrl.apiGetHolidayById)
 .put(HolidayCtrl.apiUpdateHoliday)
 .delete(HolidayCtrl.apiDeleteHoliday)

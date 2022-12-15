@@ -1,4 +1,4 @@
-const { ObjectID } = require("mongodb");
+const { ObjectID} = require("mongodb");
 
 let leaveTypes;
 
@@ -47,9 +47,11 @@ class LeaveTypeDAO {
 
   static async get(filter = {}) {
     try {
+      console.log(filter)
       const { org, ...rest } = filter;
       let query = { ...rest };
-
+      console.log(org)
+      console.log(query)
       if (org) {
         query["org"] = ObjectID(org);
       }

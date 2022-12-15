@@ -21,7 +21,8 @@ const PayrollDAO = require("../dao/payrollDAO");
  */
 class PayrollController {
   static async apiGetPayrolls(req, res) {
-    const result = await PayrollDAO.getPayrolls({ org: req.org });
+    // console.log(req.org)
+    const result = await PayrollDAO.getPayrolls({ org: String(req.org) });
     if (result.error) {
       return res.status(result.server ? 500 : 400).json({
         success: false,
@@ -76,6 +77,7 @@ class PayrollController {
     const payrollProcessor = req.body.commissionEnabled
       ? "processPayroll"
       : "generatePayroll";
+    console.log(payrollProcessor)
     const result = await PayrollDAO[payrollProcessor]({
       org: req.org,
       ...req.body,

@@ -1,19 +1,21 @@
 const Joi = require("joi");
 
-const EmployeeDAO = require("../dao/employeeDAO");
+const EmployeeDAO = require("../dao/employeeDAO")
 
 // const EmployeeValidation = require("../validation/employee");
 
 class EmployeeController {
   static async apiGetEmployees(req, res) {
+    // console.log("Alol");
     const { page = 1, limit = 10, ...rest } = req.query;
-    const result = await EmployeeDAO.getEmployees({
+    const query = {
       page,
       limit,
       ...rest,
       org: req.query.org || req.query.orgId || req.org,
-    });
-
+    };
+    console.log(query);
+    const result = await EmployeeDAO.getEmployees(query);
     if (result.error) {
       return res
         .status(result.server ? 500 : 400)
@@ -89,6 +91,7 @@ class EmployeeController {
       ...req.body,
     });
 
+    console.log(result);
     if (result.error) {
       return res
         .status(result.server ? 500 : 400)
@@ -156,7 +159,52 @@ class EmployeeController {
     });
   }
 
-  static async apiSearchEmployees(req, res) {}
+  static async apiSearchEmployees(req, res) {
+    const name = req.query.name;
+    const nameUpper = name[0]
+      .toUpperCase()
+      .concat("", name.slice(1, name.length));
+    const nameLower = name[0]
+      .toLowerCase()
+      .concat("", name.slice(1, name.length));
+
+    const info = {
+      firstName: { $in: [nameLower, nameUpper] },
+      org: req.org,
+    };
+    console.log(info)
+    const result = await EmployeeDAO.getEmployee(info);
+    console.log(result);
+    if (!result) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Employee Not Found" });
+    }
+    return res.json({
+      success: true,
+      employee: result,
+    });
+  }
+  static async apiFilterEmployees(req, res) {
+    const data = req.body;
+    let info = { org: String(req.org) };
+    for (let i in data) {
+      if (data[i]) {
+        info[i] = data[i];
+      }
+    }
+    console.log(info)
+    const result = await EmployeeDAO.filterEmployee(info);
+    if (!result) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Employee Not Found" });
+    }
+    return res.json({
+      success: true,
+      employee: Array.isArray(result) ? result[0] : result,
+    });
+  }
   static async apiImportEmployees(req, res) {}
   static async apiExportEmployees(req, res) {}
 }

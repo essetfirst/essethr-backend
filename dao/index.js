@@ -20,7 +20,8 @@ const ROLES = ["employee", "manager", "admin"];
 let client;
 
 async function startDb() {
-  client = new MongoClient( devMongodbURI,
+  client = new MongoClient(
+    devMongodbURI,
     // process.env.NODE_ENV !== "production" ? devMongodbURI : prodMongodbURI,
     {
       useNewUrlParser: true,

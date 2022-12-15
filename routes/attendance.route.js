@@ -1,10 +1,11 @@
 const { Router } = require("express");
 
 const AttendanceCtrl = require("../controllers/attendance.controller");
-
+const { importAttendance } = require("../middlewares/fileUpload")
 const router = Router();
 
 router.route("/").get(AttendanceCtrl.apiGetAttendances);
+router.route("/today").get(AttendanceCtrl.apiGetTodayAttendance);
 
 router.route("/swipe").post(AttendanceCtrl.apiSwipe);
 router.route("/checkin").post(AttendanceCtrl.apiCheckin);
@@ -15,5 +16,6 @@ router.route("/report").get(AttendanceCtrl.apiGetReport);
 
 router.route("/").delete(AttendanceCtrl.apiDeleteAttendance);
 router.route("/:id").delete(AttendanceCtrl.apiDeleteAttendance);
-
+router.route("/import").get(importAttendance,AttendanceCtrl.apiImportAttendace);
+router.route("/export").get(AttendanceCtrl.apiExportAttendace);
 module.exports = router;

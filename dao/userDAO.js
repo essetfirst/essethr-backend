@@ -81,7 +81,7 @@ class UserDAO {
 
   static async checkDuplicateEmailOrPhone(email, phone) {
     try {
-      return (await users.findOne({ email })) || (phone && (await orgs.find));
+      return (await users.findOne({ email })) || (phone && (await orgs.findOne({phone})));
     } catch (e) {
       console.error(
         chalk.redBright(`Error checking duplicate email or phone, ${e.stack}`)
@@ -141,7 +141,6 @@ class UserDAO {
   static async updateUser(userInfo) {
     try {
       const { id, accessToken, token, tokens, tokenAction, ...rest } = userInfo;
-      console.log("hkgh");
 
       const query = { _id: ObjectID(id) };
       let update = {
@@ -161,9 +160,7 @@ class UserDAO {
       const result = await users.updateOne(query, update);
       // console.log(result.modified.Count)
       if (!result.modifiedCount) {
-        return res
-          .status(404)
-          .json({ success: false, error: "Unable to activate" });
+        return { success: false, error: "Unable to activate" };
       }
       var updatedUser = await users.findOne(query);
       return updatedUser;

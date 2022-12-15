@@ -1,7 +1,12 @@
 const { performance } = require("perf_hooks");
 
 const chalk = require("chalk");
-
+const ObjectsToCsv = require("objects-to-csv");
+const { readFile } = require("fs").promises;
+const fs = require("fs");
+const csv = require("csv-parser");
+const { ObjectID, ObjectId } = require("mongodb");
+const path = require("path")
 const {
   DEFAULT_ATTENDANCE_POLICY,
   DAYS_OF_WEEK,
@@ -12,6 +17,7 @@ const { computePayableHours } = require("../lib/computePayableHours");
 const OrgDAO = require("./orgDAO");
 const EmployeeDAO = require("./employeeDAO");
 const PayrollDateDAO = require("./payrollDateDAO");
+const { func, date } = require("joi");
 
 let attendances;
 
@@ -48,7 +54,7 @@ class AttendanceDAO {
   static async swipe(attendanceInfo) {
     try {
       const { orgId, employeeId, time = Date.now(), device } = attendanceInfo;
-
+      console.log(attendanceInfo);
       if (!employeeId || employeeId === undefined) {
         return { error: "Employee id is required!" };
       }
@@ -68,16 +74,21 @@ class AttendanceDAO {
       // const { firstName, surName } = result;
       // const employeeName = `${firstName} ${surName}`;
       const employeeName = `Employee (${employeeId}) `;
-
-      const date = extractDateString(time);
+      console.log(employeeName);
+      const date = extractDateString(Date.now());
+      // const date = time
+      console.log(date);
       let query = { employeeId, date };
       const update = (data) => ({ $set: { ...data } });
+      console.log(query);
 
       let lastTime = performance.now();
       const attendance = await attendances.findOne(query);
       console.log(`Fetch attendance took: ${performance.now() - lastTime}ms`);
+      console.log(attendance);
 
       const { checkin = 0, checkout = 0 } = attendance || {};
+      console.log(checkin);
 
       let updateData = { orgId };
       if (!checkin) {
@@ -464,32 +475,34 @@ class AttendanceDAO {
     }
   }
 
-  static async getAttendances(filterCriteria = {}) {
+  static async getAttendances(filterCriteria) {
     try {
+      console.log(filterCriteria);
+
       // TODO: implementation of org based attendance
       const {
         orgId,
         employees = [],
-        fromDate = new Date(),
-        toDate = new Date(),
-        from = new Date(),
-        to = new Date(),
+        fromDate = "2021-10-21",
+        toDate = "2021-10-26",
+        from = "2022-12-19",
+        to = "2022-12-25",
       } = filterCriteria;
-
-      console.dir(filterCriteria);
+      console.log(orgId);
 
       let query = {
-        orgId,
+        orgId: ObjectID(orgId),
         date: {
-          $gte: from || fromDate,
-          $lte: to || toDate,
+          $gte: String(from) || String(fromDate),
+          $lte: String(to) || String(toDate),
         },
       };
+
+      console.log(query);
+
       if (employees.length > 0) {
         query.employeeId = { $in: employees };
       }
-
-      // console.log(query);
 
       // const pipeline = [
       //   { $match: query },
@@ -534,7 +547,8 @@ class AttendanceDAO {
       //       {}
       //     )
       //   : attendancePolicy;
-
+      //
+      // }
       return (
         result
           //   .map((attendance) => {
@@ -570,7 +584,37 @@ class AttendanceDAO {
       return { error: e, server: true };
     }
   }
+  static async getTodayAttendances(filterCriteria) {
+    try {
+      // console.log(filterCriteria);
+      // TODO: implementation of org based attendance
+      const {
+        orgId,
+        employees = [],
+        today = extractDateString(new Date()),
+        to = "2021-10-21",
+      } = filterCriteria;
+      // console.log(orgId);
 
+      let query = {
+        orgId: String(orgId),
+        date: to,
+      };
+
+      console.log(query);
+
+      if (employees.length > 0) {
+        query.employeeId = { $in: employees };
+      }
+
+      return  await attendances.find(query).toArray();
+    } catch (e) {
+      console.error(
+        chalk.redBright(`Unable to fetch all attendance records, ${e.stack}`)
+      );
+      return { error: e, server: true };
+    }
+  }
   // A functionality only available for authorized users
   static async approveAttendance({ orgId, employees, date }) {
     try {
@@ -696,6 +740,110 @@ class AttendanceDAO {
     }
   }
 
+  static async importAttendance(fileInfo) {
+    try {
+      const { filename } = fileInfo;
+      console.log(filename);
+      const results = [];
+      var Alldata = [];
+      fs.createReadStream(filename)
+        .pipe(csv({}))
+        .on("data", (data) => results.push(data))
+        .on(
+          "end",
+          async () => {
+            for (const result of results) {
+              const {
+                date,
+                employeeId,
+                checkin,
+                device,
+                orgId,
+                remark,
+                status,
+                checkout,
+              } = result;
+              Alldata.push({
+                date,
+                employeeId,
+                checkin,
+                device,
+                orgId,
+                remark,
+                status,
+                checkout,
+              });
+            }
+            // console.log(Alldata);
+            return await attendances.insertMany(Alldata);
+          }
+          // //  console.log(result);
+        );
+      // console.log(Alldata)
+      return true;
+    } catch (e) {
+      console.error(
+        chalk.redBright(`Unable to Import all attendance records, ${e}`)
+      );
+      //  { error: e, server: true };
+      return false;
+    }
+  }
+  static async exportAttendance(filterInfo) {
+    try {
+      const data = await this.getAttendancesToReport(filterInfo);
+      const name = () => new Date(Date.now()).toISOString().slice(0, 10);
+      const filename = name();
+      const on = extractTimeString(new Date()).replace(/:/g,"-")
+    //  console.log(name())
+      if (data) {
+        const fileInfo = `attendance-report-by-${filename}-T-${on}.csv`;
+        console.log(fileInfo)
+        const csv = new ObjectsToCsv(data);
+        await csv.toDisk(path.join(__dirname, "../uploads/attendance/", fileInfo));
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      console.error(
+        chalk.redBright(`Unable to Import all attendance records, ${e}`)
+      );
+      return { error: e, server: true };
+    }
+  }
+  static async getAttendancesToReport(filterCriteria = {}) {
+    try {
+      // TODO: implementation of org based attendance
+      const {
+        orgId,
+        employees = [],
+        fromDate = "2021-10-21",
+        toDate = "2021-10-26",
+        from = "2021-10-21",
+        to = "2021-10-26",
+      } = filterCriteria;
+
+      let query = {
+        orgId: String(orgId),
+        date: {
+          $gte: String(from) || String(fromDate),
+          $lte: String(to) || String(toDate),
+        },
+      };
+
+      console.log(query);
+
+      if (employees.length > 0) {
+        query.employeeId = { $in: employees };
+      }
+      const result = await attendances.find(query).toArray();
+      return result;
+    } catch (err) {
+      console.error(chalk.redBright(`Unable to generate attendance , ${e}`));
+      return { error: e, server: true };
+    }
+  }
   static async getReport(filterCriteria = {}) {
     try {
       let attendanceReport = {
@@ -705,12 +853,13 @@ class AttendanceDAO {
       };
 
       const result = await this.getAttendances(filterCriteria);
-      console.dir(result);
+      console.log(Object.keys(result));
 
       const attendanceList = [];
       Object.keys(result).forEach((date) =>
         attendanceList.push(...result[date])
       );
+      console.log(attendanceList);
 
       attendanceList.forEach(({ employeeId, date, remark }) => {
         // By date
@@ -779,5 +928,9 @@ function computeHours(datetime = 0) {
 function extractDateString(date) {
   return new Date(date).toISOString().slice(0, 10);
 }
+function extractTimeString(date) {
+  return new Date(date).toISOString().slice(11, 19);
+}
+
 
 module.exports = AttendanceDAO;

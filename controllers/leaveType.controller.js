@@ -7,6 +7,8 @@ class LeaveTypeController {
       ...req.query,
     });
 
+    console.log(result, req.params.org)
+
     if (result.error) {
       return res.status(result.server ? 500 : 400).json({
         success: false,

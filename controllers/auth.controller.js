@@ -17,10 +17,14 @@ class AuthController {
       const { user = {}, org = {} } = req.body;
 
       const { email, phone, password, ...rest } = user;
+        console.log("HELLO");
+
       const phoneOrEmailExists = await UserDAO.checkDuplicateEmailOrPhone(
         email,
         phone
       );
+
+      // console.log(phoneOrEmailExists);
       if (phoneOrEmailExists) {
         return res
           .status(400)
@@ -227,14 +231,12 @@ class AuthController {
           error: "User Not found",
         });
       }
-      const { firstName, lastName, email } = user;
-      type = "User";
-      profile = { firstName, lastName, email };
+      const { firstName, lastName, email,org,role } = user;
+      profile = { firstName, lastName, email,org ,role};
     } else {
       profile = req.org;
-      type = "ORG";
     }
-    return res.json({ success: true, type, profile });
+    return res.json({ success: true, profile });
   }
 
   static async apiLogout(req, res) {

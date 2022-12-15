@@ -327,7 +327,7 @@ class OrgDAO {
   static async updateOrg(orgInfo) {
     try {
       const { _id, slug, ...rest } = orgInfo;
-      let query = { _id: ObjectID(_id), slug };
+      let query = { _id: ObjectID(_id) };
       let update = { $set: { ...rest } };
       return await orgs.updateOne(query, update);
     } catch (e) {

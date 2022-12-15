@@ -56,9 +56,10 @@ class DepartmentDAO {
       let query = { ...rest };
 
       if (org) {
-        query["org"] = ObjectID(org);
+        query["org"] = String(org);
       }
 
+      console.log(query)
       return await departments.find(query).toArray();
     } catch (e) {
       console.error(`Error fetching departments, ${e}`);

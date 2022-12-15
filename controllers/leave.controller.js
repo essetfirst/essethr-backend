@@ -6,6 +6,7 @@ class LeaveController {
     const result = await LeaveAllowanceDAO.allocateAllowance(
       leaveAllowanceInfo
     );
+    console.log(result);
     if (result.error) {
       return res
         .status(500)
@@ -19,7 +20,9 @@ class LeaveController {
 
   static async apiUseAllowance(req, res) {
     const useDetails = req.body;
-    const result = await LeaveAllowanceDAO.updateAllowance(useDetails);
+    console.log(useDetails);
+    const result = await LeaveAllowanceDAO.updateAllowances(useDetails);
+    // console.log(result)
     if (result.error) {
       return res
         .status(500)
@@ -64,6 +67,23 @@ class LeaveController {
     });
   }
 
+  static async apiExportLeaves(req, res) {
+    const result = await LeaveDAO.ExportLeaves({ org: req.params.org });
+    if (result) {
+              return res
+                .status(200)
+                .json({ success: true, message: "Leave Report EXported " });
+
+    } else {
+              return res.status(500).json({
+                success: false,
+                error: "No Result found.",
+              });
+
+    }
+      }
+    
+  
   static async apiGetLeaveById(req, res) {
     const result = await LeaveDAO.getLeaveById(req.params.id);
 
@@ -129,15 +149,15 @@ class LeaveController {
   static async apiUpdateLeave(req, res) {
     const result = await LeaveDAO.updateLeave({
       ...req.body,
-      _id: req.params.id,
+      id: req.params.id,
+      org: String(req.org),
     });
 
-    if (result.error) {
+    // console.log(result)
+    if (!result.modifiedCount) {
       return res.status(result.server ? 500 : 400).json({
         success: false,
-        error: result.server
-          ? "Internal error, try again later."
-          : result.error,
+        error: "Unable to Update Leave",
       });
     }
 

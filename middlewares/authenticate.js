@@ -21,15 +21,18 @@ const authenticate = async (req, res, next) => {
     const id = decoded.id;
     const user = await UserDAO.getUserById(id);
     const org = await OrgDAO.getOrgById(id)
+    // console.log(user,org)
     if (!(user || org)) {
       return res
         .status(401)
         .json({ success: false, error: "Unauthorized access attempt!" });
     }
 
-    const {_id,name,address,phone} = org
+    // const { _id, name, address, phone } = org
+    // console.log(req.user.org);
     req.user = user;
-    req.org = org ? { _id,name,phone,address } : req.user.org;
+    req.org = req.user.org;
+    // console.log(req.user,req.org)
     next();
   } catch (e) {
     console.error(`Error verifying token`);
