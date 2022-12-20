@@ -6,7 +6,7 @@ const { readFile } = require("fs").promises;
 const fs = require("fs");
 const csv = require("csv-parser");
 const { ObjectID, ObjectId } = require("mongodb");
-const path = require("path")
+const path = require("path");
 const {
   DEFAULT_ATTENDANCE_POLICY,
   DAYS_OF_WEEK,
@@ -428,28 +428,26 @@ class AttendanceDAO {
 
   static async checkout(attendanceInfo) {
     try {
-      const { employeeId, time = Date.now(), device } = attendanceInfo;
+      const { orgId, employeeId, time = Date.now(), device } = attendanceInfo;
       const date = extractDateString(time);
 
       if (!employeeId || employeeId === undefined) {
         return { error: "Employee identity required for checkout!" };
       }
 
-      const query = { employeeId, date };
+      const query = { orgId, employeeId, date };
       const update = { $set: { checkout: time, device } };
 
       // TODO: compute attendance hours
 
+      console.log(query);
       // Add attended hours to payroll date
-      const result = await attendances.findOne({
-        employeeId,
-        date,
-      });
-
+      const result = await attendances.findOne(query);
+      console.log(result);
       if (!result) {
         return { error: "You should checkin first!" };
       }
-
+      // console.log(computeHours(Date.now()-result.checkin))
       if (computeHours(Date.now() - result.checkin) < 1) {
         return { error: "You need to wait for at least an hour to checkout!" };
       }
@@ -477,24 +475,21 @@ class AttendanceDAO {
 
   static async getAttendances(filterCriteria) {
     try {
-      console.log(filterCriteria);
-
       // TODO: implementation of org based attendance
       const {
         orgId,
         employees = [],
-        fromDate = "2021-10-21",
-        toDate = "2021-10-26",
+        fromDate,
+        toDate,
         from = "2022-12-19",
         to = "2022-12-25",
       } = filterCriteria;
-      console.log(orgId);
 
       let query = {
-        orgId: ObjectID(orgId),
+        orgId: String(orgId) || ObjectID(orgId),
         date: {
-          $gte: String(from) || String(fromDate),
-          $lte: String(to) || String(toDate),
+          $gte: fromDate ? String(fromDate) : extractDateString(new Date()),
+          $lte: toDate ? String(toDate) : extractDateString(new Date()),
         },
       };
 
@@ -549,6 +544,7 @@ class AttendanceDAO {
       //   : attendancePolicy;
       //
       // }
+      console.log(result);
       return (
         result
           //   .map((attendance) => {
@@ -592,13 +588,12 @@ class AttendanceDAO {
         orgId,
         employees = [],
         today = extractDateString(new Date()),
-        to = "2021-10-21",
       } = filterCriteria;
       // console.log(orgId);
 
       let query = {
         orgId: String(orgId),
-        date: to,
+        date: today,
       };
 
       console.log(query);
@@ -607,7 +602,7 @@ class AttendanceDAO {
         query.employeeId = { $in: employees };
       }
 
-      return  await attendances.find(query).toArray();
+      return await attendances.find(query).toArray();
     } catch (e) {
       console.error(
         chalk.redBright(`Unable to fetch all attendance records, ${e.stack}`)
@@ -701,9 +696,14 @@ class AttendanceDAO {
         };
       }
 
-      const query = { orgId, employeeId, date: extractDateString(date) };
+      const query = {
+        orgId: String(orgId),
+        employeeId,
+        date: extractDateString(date),
+      };
       const update = { $set: { ...newData, ...rest } };
       const result = await attendances.updateOne(query, update);
+      // console.log(result,update)
       console.log(
         "[attendanceDAO]: Line 638 -> Update operation result: ",
         `${result.modifiedCount} upserted with id ${result.upsertedId}`
@@ -794,13 +794,14 @@ class AttendanceDAO {
       const data = await this.getAttendancesToReport(filterInfo);
       const name = () => new Date(Date.now()).toISOString().slice(0, 10);
       const filename = name();
-      const on = extractTimeString(new Date()).replace(/:/g,"-")
-    //  console.log(name())
+      const on = extractTimeString(new Date()).replace(/:/g, "-");
       if (data) {
         const fileInfo = `attendance-report-by-${filename}-T-${on}.csv`;
-        console.log(fileInfo)
+        console.log(fileInfo);
         const csv = new ObjectsToCsv(data);
-        await csv.toDisk(path.join(__dirname, "../uploads/attendance/", fileInfo));
+        await csv.toDisk(
+          path.join(__dirname, "../uploads/attendance/", fileInfo)
+        );
         return true;
       } else {
         return false;
@@ -815,25 +816,16 @@ class AttendanceDAO {
   static async getAttendancesToReport(filterCriteria = {}) {
     try {
       // TODO: implementation of org based attendance
-      const {
-        orgId,
-        employees = [],
-        fromDate = "2021-10-21",
-        toDate = "2021-10-26",
-        from = "2021-10-21",
-        to = "2021-10-26",
-      } = filterCriteria;
+      const { orgId, employees = [], fromDate, toDate } = filterCriteria;
 
       let query = {
         orgId: String(orgId),
         date: {
-          $gte: String(from) || String(fromDate),
-          $lte: String(to) || String(toDate),
+          $gte: fromDate ? String(fromDate) : extractDateString(new Date()),
+          $lte: toDate ? String(toDate) : extractDateString(new Date()),
         },
       };
-
       console.log(query);
-
       if (employees.length > 0) {
         query.employeeId = { $in: employees };
       }
@@ -922,7 +914,7 @@ class AttendanceDAO {
  *
  */
 function computeHours(datetime = 0) {
-  return Math.ceil(datetime / 3600000);
+  return Math.floor(datetime / 3600000);
 }
 
 function extractDateString(date) {
@@ -931,6 +923,5 @@ function extractDateString(date) {
 function extractTimeString(date) {
   return new Date(date).toISOString().slice(11, 19);
 }
-
 
 module.exports = AttendanceDAO;

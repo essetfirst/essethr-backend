@@ -1,14 +1,21 @@
 // const { OrgDAO } = require("../dao");
+const { query } = require("express");
+const { date } = require("joi");
 const AttendanceDAO = require("../dao/attendanceDAO");
 
 class AttendanceController {
   static async apiGetAttendances(req, res) {
-    const filter = {
-      orgId: req.org,
-    };
+    // if (req.body) {
+    const date = new Date()
+      const filter = {
+        orgId: req.org,
+        fromDate: req.body.fromDate,
+        toDate: req.body.toDate
+      };
+    // const filter = {orgId:req.org}
     console.log(filter);
     const result = await AttendanceDAO.getAttendances(filter);
-
+    // console.log(result)
     if (result.error) {
       return res.status(result.server ? 500 : 400).json({
         success: false,
@@ -72,7 +79,7 @@ class AttendanceController {
   }
 
   static async apiCheckout(req, res) {
-    const result = await AttendanceDAO.checkout(req.body);
+    const result = await AttendanceDAO.checkout({ orgId: req.org, ...req.body });
 
     // console.log(result);
 
@@ -202,17 +209,11 @@ class AttendanceController {
   }
 
   static async apiGetReport(req, res) {
-    // const result = await AttendanceDAO.getReport({
-    //   ...req.query,
-    //   org: req.org,
-    // });
-    console.log(req.query);
-    // console.log(req.org);
 
     const result = await AttendanceDAO.getReport({
       orgId: String(req.org),
-      from: "2021-10-21",
-      to: "2021-10-26",
+      fromDate: req.body.fromDate,
+      toDate: req.body.toDate,
     });
 
     if (result.error) {
@@ -249,10 +250,8 @@ class AttendanceController {
     const result = await AttendanceDAO.exportAttendance({
       orgId: req.org,
       employees: [],
-      fromDate: "2021-10-21",
-      toDate: "2021-10-26",
-      from: "2021-10-21",
-      to: "2021-10-26",
+      fromDate: req.body.fromDate,
+      toDate: req.body.toDate,
     });
 
     console.log(result);
