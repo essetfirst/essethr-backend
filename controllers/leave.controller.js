@@ -22,7 +22,7 @@ class LeaveController {
     const useDetails = req.body;
     console.log(useDetails);
     const result = await LeaveAllowanceDAO.updateAllowances(useDetails);
-    // console.log(result)
+    console.log(result)
     if (result.error) {
       return res
         .status(500)
@@ -35,9 +35,9 @@ class LeaveController {
   }
 
   static async apiGetAllowances(req, res) {
-    console.log("Entering allowances handler...");
+    // console.log("Entering allowances handler...");
     const result = await LeaveAllowanceDAO.getAllowances();
-    console.log("Entered allowances handler...");
+    // console.log("Entered allowances handler...");
     if (result.error) {
       return res
         .status(500)
@@ -68,20 +68,14 @@ class LeaveController {
   }
 
   static async apiExportLeaves(req, res) {
-    const result = await LeaveDAO.ExportLeaves({ org: req.params.org });
+    const result = await LeaveDAO.ExportLeaves({ ...req.query, org: req.params.org });
+    console.log(result);
     if (result) {
-              return res
-                .status(200)
-                .json({ success: true, message: "Leave Report EXported " });
-
-    } else {
-              return res.status(500).json({
-                success: false,
-                error: "No Result found.",
-              });
-
+      return res.status(200).json({ success: true, message: "Leave Report EXported " });
+    }else {
+      return res.status(500).json({success: false,error: "No Result found."});
     }
-      }
+  }
     
   
   static async apiGetLeaveById(req, res) {
@@ -104,6 +98,7 @@ class LeaveController {
 
   static async apiAddLeave(req, res) {
     const result = await LeaveDAO.addLeave({ org: req.org, ...req.body });
+    // console.log(result)
 
     if (result.error) {
       return res.status(result.server ? 500 : 400).json({

@@ -1,5 +1,5 @@
 const PayrollDateDAO = require("./payrollDateDAO");
-
+const { ObjectID, ObjectId } = require("mongodb");
 let holidays;
 
 /**
@@ -23,11 +23,10 @@ class HolidayDAO {
     try {
       const { org, ...rest } = filter;
       let query = { ...rest };
-
+       
       if (org) {
-        query["org"] = ObjectID(org);
+        query["org"] = String(org);
       }
-
       return await holidays.find(query).toArray();
     } catch (e) {
       console.error(`Error fetching holidays, ${e}`);

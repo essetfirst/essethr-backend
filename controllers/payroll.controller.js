@@ -83,7 +83,7 @@ class PayrollController {
       ...req.body,
       ...req.query,
     });
-
+    console.log(result)
     if (!result || result.error) {
       return res.status(result.server ? 500 : 400).json({
         success: false,

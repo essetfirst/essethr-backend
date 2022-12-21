@@ -10,7 +10,7 @@ const PayrollDateDAO = require("./payrollDateDAO");
 const { start } = require("repl");
 const path = require("path");
 const { date, func } = require("joi");
-const leavePath = path.join(__dirname,'../uploads/leaves/')
+const leavePath = path.join(__dirname, "../uploads/leaves/");
 let leaves;
 let allowances;
 
@@ -50,8 +50,10 @@ class LeaveDAO {
         toDate,
         endDate,
       } = filterCriteria;
+      // console.log(filterCriteria);
       const start = from || fromDate || startDate;
       const end = to || toDate || endDate;
+      // console.log(start, end);
       const query = {
         org: String(org),
         employeeId:
@@ -94,49 +96,15 @@ class LeaveDAO {
   }
   static async ExportLeaves(filterCriteria) {
     try {
-      const { org } = filterCriteria;
-      const end = new Date()
-      const startDate = (end) => {
-        const start = new Date(new Date().getTime());
-        start.setMonth(start.getMonth() - 1);
-        return start
-      }
-      // console.log(startDate,end,org)
-      const query = {
-        org: String(org),
-        startDate: { $gte: extractDateString(startDate()) },
-        endDate: { $lte: extractDateString(end) },
-      };
-      const by = extractDateString(end)
-      const on = extractTimeString(end).replace(/:/g, "-")
-      // const pipeline = [
-      //   { $match: query },
-      //   {
-      //     $lookup: {
-      //       from: "employees",
-      //       let: { id: "$employeeId" },
-      //       pipeline: [
-      //         {
-      //           $match: {
-      //             _id: "$$id"
-      //           },
-      //         },
-      //         {
-      //           $project: { firstName: 1, lastName: 1 },
-      //         },
-      //       ],
-      //       as: "employee",
-      //     },
-      //   },
-      // ];
-      // return await leaves.aggregate(pipeline).toArray();
-
-      console.log(by,on);
-      const result = await leaves.find(query).toArray(); 
+      const result = await this.getLeaves(filterCriteria);
+      const by = extractDateString(new Date());
+      const on = extractTimeString(new Date()).replace(/:/g, "-");
+    
+      console.log(result);
       if (result) {
         const fileInfo = `Monthly-leave-report-by-${by}-on-${on}.csv`;
         const csv = new ObjectsToCsv(result);
-        console.log(fileInfo)
+        console.log(fileInfo);
         await csv.toDisk(path.join(__dirname, "../uploads/leaves/", fileInfo), {
           append: true,
         });
@@ -144,7 +112,6 @@ class LeaveDAO {
       } else {
         return false;
       }
-    
     } catch (e) {
       console.error(chalk.redBright(`Unable To fetch leaves, ${e}`));
       return { server: true, error: e };
@@ -461,8 +428,8 @@ class LeaveAllowanceDAO {
       const query = {
         employeeId:
           employees.length > 1
-            ? { $in: [ObjectID(employees)] }
-            : ObjectID(employees[0]),
+            ? { $in: [String(employees)] }
+            : String(employees[0]),
       };
 
       // console.log(query);
@@ -497,7 +464,5 @@ function extractDateString(date) {
 function extractTimeString(date) {
   return new Date(date).toISOString().slice(11, 19);
 }
-
-
 
 module.exports = { LeaveDAO, LeaveAllowanceDAO };

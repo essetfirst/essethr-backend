@@ -39,7 +39,7 @@ class HolidayController {
   static async apiAddHoliday(req, res) {
     const result = await HolidayDAO.addHoliday({
       ...req.body,
-      org: req.params.org || req.body.org || req.org,
+      org: req.params.org || req.org,
     });
 
     if (result.error) {
@@ -69,7 +69,7 @@ class HolidayController {
       });
     }
 
-    console.log(result);
+    // console.log(result);
     return res.status(200).json({
       success: true,
       holiday: result,

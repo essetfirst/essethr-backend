@@ -53,7 +53,7 @@ class LeaveTypeDAO {
       console.log(org)
       console.log(query)
       if (org) {
-        query["org"] = ObjectID(org);
+        query["org"] = String(org);
       }
 
       return await leaveTypes.find(query).toArray();
