@@ -2,6 +2,7 @@ const router = require("express").Router();
 
 const authenticate = require("../middlewares/authenticate");
 
+const healthRoutes = require("./health.route");
 const signupRoutes = require("./signup.route");
 const authRoutes = require("./auth.route");
 const userRoutes = require("./user.route");
@@ -13,6 +14,7 @@ const leaveRoutes = require("./leaves.route");
 const payrollRoutes = require("./payroll.route");
 
 router.use("/", signupRoutes);
+router.use("/health", healthRoutes);
 router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
 router.use("/orgs", authenticate, orgRoutes);
