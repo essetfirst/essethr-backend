@@ -1,6 +1,4 @@
-const { min } = require("moment/moment");
-const { ObjectID,ObjectId } = require("mongodb");
-const { all } = require("../routes/employee.route");
+const { ObjectID } = require("mongodb");
 const { LeaveAllowanceDAO } = require("./leaveDAO");
 
 let employees;
@@ -22,8 +20,6 @@ let employees;
  *
  */
 
-
-  
 /**
  * @typedef AddressInfo
  * @property {String} state
@@ -167,7 +163,7 @@ class EmployeeDAO {
    * @param filterCriteria Page Limit
    *
    */
-  static async getEmployees(filterCriteria={}) {
+  static async getEmployees(filterCriteria = {}) {
     try {
       const { org, page, limit } = filterCriteria;
       let query = {};
@@ -184,7 +180,7 @@ class EmployeeDAO {
 
       console.log("\nQuery: \n", query);
       let findPipeline = employees.find(query);
-      console.log(findPipeline)
+      console.log(findPipeline);
       if (limit) {
         findPipeline = findPipeline.limit(limit);
       }
@@ -463,7 +459,7 @@ class EmployeeDAO {
       //   const query = employeeInfo;
       console.log(employeeInfo);
       const data = await employees.findOne(employeeInfo);
-        console.log("MOl");
+      console.log("MOl");
       // console.log(JSON.stringify(data));
       return data;
     } catch (e) {
@@ -477,19 +473,19 @@ class EmployeeDAO {
       let { department, gender, position, minSalary, maxSalary, org } =
         employeeInfo;
       console.log(employeeInfo);
-      var salary
+      var salary;
       if (minSalary) {
-        salary={$gte:minSalary}
+        salary = { $gte: minSalary };
       }
       if (maxSalary) {
-        salary = {$lte:maxSalary}
+        salary = { $lte: maxSalary };
       }
       if (minSalary && maxSalary) {
-        salary ={$gte:minSalary,$lte:maxSalary}
+        salary = { $gte: minSalary, $lte: maxSalary };
       }
 
       const query = {
-        org:ObjectID(org),
+        org: ObjectID(org),
         gender: gender ? gender : { $ne: null },
         department: department ? department : { $ne: null },
         position: position ? position : { $ne: null },
@@ -502,7 +498,6 @@ class EmployeeDAO {
       return { error: e };
     }
   }
-
 }
 
 module.exports = EmployeeDAO;
