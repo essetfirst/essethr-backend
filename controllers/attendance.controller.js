@@ -2,19 +2,42 @@
 const { query } = require("express");
 const { date } = require("joi");
 const AttendanceDAO = require("../dao/attendanceDAO");
+const EmployeeDAO = require("../dao/employeeDAO");
 
 class AttendanceController {
   static async apiGetAttendances(req, res) {
     // if (req.body) {
-    const date = new Date()
-      const filter = {
-        orgId: req.org,
-        fromDate: req.body.fromDate,
-        toDate: req.body.toDate
-      };
+    const date = new Date();
+    const filter = {
+      orgId: req.org,
+      fromDate: req.body.fromDate,
+      toDate: req.body.toDate,
+    };
     // const filter = {orgId:req.org}
     console.log(filter);
     const result = await AttendanceDAO.getAttendances(filter);
+    // console.log(result)
+    if (result.error) {
+      return res.status(result.server ? 500 : 400).json({
+        success: false,
+        error: result.server ? "Something went wrong." : result.error,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      total_results: result.length,
+      attendance: result,
+    });
+  }
+  static async apiGetAllAttendances(req, res) {
+    // if (req.body) {
+    const date = new Date();
+    const filter = {
+      orgId: req.org,
+    };
+    console.log(filter);
+    const result = await AttendanceDAO.getAllAttendances(filter);
     // console.log(result)
     if (result.error) {
       return res.status(result.server ? 500 : 400).json({
@@ -79,7 +102,10 @@ class AttendanceController {
   }
 
   static async apiCheckout(req, res) {
-    const result = await AttendanceDAO.checkout({ orgId: req.org, ...req.body });
+    const result = await AttendanceDAO.checkout({
+      orgId: req.org,
+      ...req.body,
+    });
 
     // console.log(result);
 
@@ -209,7 +235,6 @@ class AttendanceController {
   }
 
   static async apiGetReport(req, res) {
-
     const result = await AttendanceDAO.getReport({
       orgId: String(req.org),
       fromDate: req.body.fromDate,
@@ -226,6 +251,28 @@ class AttendanceController {
     return res.json({
       success: true,
       report: result,
+    });
+  }
+  static async apiGetDailyReport(req, res) {
+    let result = await AttendanceDAO.getDailyReport({
+      orgId: String(req.org)
+    });
+    const empCount = await EmployeeDAO.getEmployees({ org: String(req.org) });
+    const resultLength = result.map((item) => item.count).reduce((prev, next) => prev + next);
+    const absentCount = empCount.length > resultLength ? empCount.length - resultLength : 0;
+    const absent = { "_id": "absent", "count": absentCount };
+    result.push(absent)
+
+    if (result.error) {
+      return res.status(result.server ? 500 : 400).json({
+        success: false,
+        error: result.server ? "Something went wrong" : result.error,
+      });
+    }
+    return res.json({
+      success: true,
+      total:result.map((item) => item.count).reduce((prev, next) => prev + next),
+      report: result
     });
   }
   static async apiImportAttendace(req, res) {

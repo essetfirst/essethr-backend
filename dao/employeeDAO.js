@@ -1,6 +1,7 @@
 const { min } = require("moment/moment");
-const { ObjectID,ObjectId } = require("mongodb");
-const { all } = require("../routes/employee.route");
+const { ObjectID, ObjectId, ISODate } = require("mongodb");
+const { INTEGER } = require("sequelize");
+// const { all } = require("../routes/employee.route");
 const { LeaveAllowanceDAO } = require("./leaveDAO");
 
 let employees;
@@ -22,8 +23,6 @@ let employees;
  *
  */
 
-
-  
 /**
  * @typedef AddressInfo
  * @property {String} state
@@ -167,13 +166,13 @@ class EmployeeDAO {
    * @param filterCriteria Page Limit
    *
    */
-  static async getEmployees(filterCriteria={}) {
+  static async getEmployees(filterCriteria = {}) {
     try {
       const { org, page, limit } = filterCriteria;
       let query = {};
       console.log(filterCriteria);
       if (org) {
-        query["org"] = ObjectID(org);
+        query["org"] = String(org);
       }
 
       const aEmployees = filterCriteria.employees;
@@ -184,7 +183,7 @@ class EmployeeDAO {
 
       console.log("\nQuery: \n", query);
       let findPipeline = employees.find(query);
-      console.log(findPipeline)
+      console.log(findPipeline);
       if (limit) {
         findPipeline = findPipeline.limit(limit);
       }
@@ -463,7 +462,7 @@ class EmployeeDAO {
       //   const query = employeeInfo;
       console.log(employeeInfo);
       const data = await employees.findOne(employeeInfo);
-        console.log("MOl");
+      console.log("MOl");
       // console.log(JSON.stringify(data));
       return data;
     } catch (e) {
@@ -474,35 +473,74 @@ class EmployeeDAO {
 
   static async filterEmployee(employeeInfo) {
     try {
-      let { department, gender, position, minSalary, maxSalary, org } =
-        employeeInfo;
-      console.log(employeeInfo);
-      var salary
+      let {
+        department,
+        gender,
+        position,
+        minSalary,
+        maxSalary,
+        minAge,
+        maxAge,
+        org,
+      } = employeeInfo;
+      console.log(minAge, maxAge);
+      const today = new Date().toJSON().slice(0, 10);
+      const minus = +today.split("-")[0] - minAge;
+      const plus = +today.split("-")[0] - maxAge;
+      // console.log(today.split("-"),today,minus,plus)
+      var birthDate;
+      var salary;
       if (minSalary) {
-        salary={$gte:minSalary}
+        salary = { $gte: minSalary };
       }
       if (maxSalary) {
-        salary = {$lte:maxSalary}
+        salary = { $lte: maxSalary };
       }
       if (minSalary && maxSalary) {
-        salary ={$gte:minSalary,$lte:maxSalary}
+        salary = { $gte: minSalary, $lte: maxSalary };
+      }
+      if (minAge) {
+        birthDate = {
+          $lte: new Date(`${minus}-01-01`).toISOString().split("T")[0],
+        };
+      }
+      if (maxAge) {
+        birthDate = {
+          $gte: new Date(`${plus}-01-01`).toISOString().split("T")[0],
+        };
+      }
+      if (maxAge && minAge) {
+        birthDate = {
+          $lte: new Date(`${minus}-12-30`).toISOString().split("T")[0],
+          $gte: new Date(`${plus}-01-01`).toISOString().split("T")[0],
+        };
       }
 
+      console.log(birthDate);
       const query = {
-        org:ObjectID(org),
-        gender: gender ? gender : { $ne: null },
-        department: department ? department : { $ne: null },
-        position: position ? position : { $ne: null },
-        salary,
+        org: String(org),
+        gender:
+          (gender && gender == "all") || gender == undefined
+            ? { $exists: true }
+            : gender,
+        department:
+          (department && department == "all") || department == undefined
+            ? { $exists: true }
+            : department,
+        position:
+          (position && position == "all") || position == undefined
+            ? { $exists: true }
+            : position,
+        birthDay: birthDate,
+        // salary,
       };
       console.log(query);
-      return await employees.find(query);
+      return await employees.find(query).toArray();
     } catch (e) {
       console.error(`Unable to fetch employee by id, ${e}`);
       return { error: e };
     }
   }
-
 }
 
 module.exports = EmployeeDAO;

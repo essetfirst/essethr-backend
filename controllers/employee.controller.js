@@ -1,6 +1,8 @@
 const Joi = require("joi");
-
+const {ObjectID,ObjectId} = require("mongodb")
 const EmployeeDAO = require("../dao/employeeDAO")
+const { parse, stringify, toJSON, fromJSON } = require("flatted");
+
 
 // const EmployeeValidation = require("../validation/employee");
 
@@ -14,7 +16,7 @@ class EmployeeController {
       ...rest,
       org: req.query.org || req.query.orgId || req.org,
     };
-    console.log(query);
+    // console.log(query);
     const result = await EmployeeDAO.getEmployees(query);
     if (result.error) {
       return res
@@ -63,11 +65,16 @@ class EmployeeController {
     //   return res
     //     .status(400)
     //     .json({ success: false, error: Object.values(errors).join(", ") });
-    // }
-
+    // const [id, bachelor, masters, support] = req.files
+    // const paths = [id, bachelor, masters, support].map((d) => d ? d.path : '')
+    
+    // const allPaths = { IdCard: paths[0], degree: paths[1], masters: paths[2], support: paths[3] }
+    // const allData = { ...req.body, ...allPaths }
+    console.log({org:req.org,...req.body})
+    
     const result = await EmployeeDAO.createEmployee({
-      org: req.org,
-      ...req.body,
+      org: String(req.org),
+      ...req.body
     });
 
     if (result.error) {
@@ -75,7 +82,7 @@ class EmployeeController {
         .status(result.server ? 500 : 400)
         .json({ success: false, error: result.server ? null : result.error });
     } else {
-      const employee = await EmployeeDAO.getEmployeeById(result.ops[0]);
+      const employee = await EmployeeDAO.getEmployeeById(result.insertedId);
 
       return res.status(201).json({
         success: true,
@@ -186,24 +193,28 @@ class EmployeeController {
     });
   }
   static async apiFilterEmployees(req, res) {
-    const data = req.body;
+    const data = req.query;
     let info = { org: String(req.org) };
     for (let i in data) {
       if (data[i]) {
         info[i] = data[i];
       }
     }
-    console.log(info)
+    // console.log(info)
     const result = await EmployeeDAO.filterEmployee(info);
     if (!result) {
       return res
         .status(404)
         .json({ success: false, message: "Employee Not Found" });
     }
+ 
+  console.log(Array.isArray(result))
+
     return res.json({
       success: true,
       employee: Array.isArray(result) ? result[0] : result,
     });
+    // // return result
   }
   static async apiImportEmployees(req, res) {}
   static async apiExportEmployees(req, res) {}

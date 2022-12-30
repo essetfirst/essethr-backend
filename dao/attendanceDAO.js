@@ -478,6 +478,7 @@ class AttendanceDAO {
       // TODO: implementation of org based attendance
       const {
         orgId,
+        org,
         employees = [],
         fromDate,
         toDate,
@@ -486,18 +487,121 @@ class AttendanceDAO {
       } = filterCriteria;
 
       let query = {
-        orgId: String(orgId) || ObjectID(orgId),
+        orgId: String(orgId || org) || ObjectID(orgId || org),
         date: {
-          $gte: fromDate ? String(fromDate) : extractDateString(new Date()),
-          $lte: toDate ? String(toDate) : extractDateString(new Date()),
+          $gte: fromDate
+            ? extractDateString(fromDate)
+            : extractDateString(new Date()),
+          $lte: toDate
+            ? extractDateString(toDate)
+            : extractDateString(new Date()),
         },
+      };
+
+      
+      if (employees.length > 0) {
+        query.employeeId = { $in: employees };
+      }
+      console.log(query);
+
+      // const pipeline = [
+      //   { $match: query },
+      //   {
+      //     $lookup: {
+      //       from: "employees",
+      //       let: { id: { $toObjectId: "$employeeId" } },
+      //       pipeline: [
+      //         {
+      //           $match: {
+      //             _id: "$$id",
+      //             org: org ? ObjectID(org) : { $exists: true },
+      //           },
+      //         },
+      //         {
+      //           $project: { firstName: 1, surName: 1, lastName: 1 },
+      //         },
+      //       ],
+      //       as: "employee",
+      //     },
+      //   },
+      // ];
+      // const result = await attendances.aggregate(pipeline).toArray();
+
+      const result = await attendances.find(query).toArray();
+      // console.log("Attendance result: ", result);
+      // let attendancePolicy = DEFAULT_ATTENDANCE_POLICY;
+
+      // if (orgId) {
+      //   // const { attendancePolicy /*, holidaySchedule */ } = await OrgDAO.getOrgById(req.org);
+      //   const org = await OrgDAO.getOrgById(orgId);
+      //   attendancePolicy = Object.assign(
+      //     {},
+      //     attendancePolicy,
+      //     org.attendancePolicy
+      //   );
+      // }
+
+      // attendancePolicy = Array.isArray(attendancePolicy)
+      //   ? attendancePolicy.reduce(
+      //       (prev, next) => Object.assign({}, prev, next),
+      //       {}
+      //     )
+      //   : attendancePolicy;
+      //
+      // }
+      // console.log(result);
+      return (
+        result
+          //   .map((attendance) => {
+          //     const day = new Date(attendance.checkin).getDay();
+          //     const { workedHours, overtimeHours } = computePayableHours(
+          //       attendance,
+          //       attendancePolicy[DAYS_OF_WEEK[day]].workHours
+          //     );
+
+          //     console.log("Worked hours: ", workedHours);
+          //     console.log("Overtime hours: ", overtimeHours);
+
+          //     return {
+          //       ...attendance,
+          //       workedHours,
+          //       overtimeHours,
+          //     };
+          //   })
+          .reduce((prev, next) => {
+            let attendanceList = prev[next.date];
+            if (attendanceList && Array.isArray(attendanceList)) {
+              attendanceList.push(next);
+            } else {
+              attendanceList = [next];
+            }
+            return Object.assign({}, prev, { [next.date]: attendanceList });
+          }, {})
+      );
+    } catch (e) {
+      console.error(
+        chalk.redBright(`Unable to fetch all attendance records, ${e.stack}`)
+      );
+      return { error: e, server: true };
+    }
+  }
+  static async getAllAttendances(filterCriteria) {
+    try {
+      // TODO: implementation of org based attendance
+      const {
+        orgId,
+        org
+      } = filterCriteria;
+
+      let query = {
+        orgId: String(orgId || org) || ObjectID(orgId || org),
       };
 
       console.log(query);
 
-      if (employees.length > 0) {
-        query.employeeId = { $in: employees };
-      }
+      // if (employees.length > 0) {
+      //   query.employeeId = { $in: employees };
+      // }
 
       // const pipeline = [
       //   { $match: query },
@@ -833,6 +937,30 @@ class AttendanceDAO {
       return result;
     } catch (err) {
       console.error(chalk.redBright(`Unable to generate attendance , ${e}`));
+      return { error: e, server: true };
+    }
+  }
+  static async getDailyReport(filterCriteria={}) {
+    try {
+      const { orgId } = filterCriteria;
+      const today = new Date().toJSON().slice(0, 10).replace(/-/g, "-");
+       let query = {
+         orgId: String(orgId),
+         date:"2021-10-20",
+      };
+      const result = await attendances.aggregate(
+        { $match: query},
+        { $group: { _id: "$remark", count: { $sum: 1 } } },
+        { $project: { remark: "$_id", count: 1 } }
+      ).toArray();
+      // const resl = await attendances.find(query).toArray();
+      // console.log(resl)
+      return result;
+      // return resl;
+    }catch (e) {
+      console.error(
+        chalk.redBright(`Unable to get attendance report, ${e}`)
+      );
       return { error: e, server: true };
     }
   }
