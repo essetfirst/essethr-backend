@@ -1,5 +1,5 @@
 const { min } = require("moment/moment");
-const { ObjectID, ObjectId, ISODate } = require("mongodb");
+const { ObjectID, ObjectId } = require("mongodb");
 const { INTEGER } = require("sequelize");
 // const { all } = require("../routes/employee.route");
 const { LeaveAllowanceDAO } = require("./leaveDAO");
@@ -516,7 +516,6 @@ class EmployeeDAO {
         };
       }
 
-      console.log(birthDate);
       const query = {
         org: String(org),
         gender:
