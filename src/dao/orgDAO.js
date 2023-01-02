@@ -1,5 +1,5 @@
 const chalk = require("chalk");
-const { ObjectID } = require("mongodb");
+const { ObjectID,ObjectId } = require("mongodb");
 
 const getSlug = require("../utils/getSlug");
 const { DEFAULT_ATTENDANCE_POLICY } = require("../constants");
@@ -242,7 +242,7 @@ class OrgDAO {
 
   static async getOrgById(orgId) {
     try {
-      let query = { _id: ObjectID(orgId) };
+      let query = { _id: ObjectId(orgId) };
       const pipeline = [
         { $match: query },
         {

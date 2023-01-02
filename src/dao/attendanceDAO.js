@@ -948,13 +948,15 @@ class AttendanceDAO {
          orgId: String(orgId),
          date:"2021-10-20",
       };
+      console.log(query);
       const result = await attendances.aggregate(
         { $match: query},
         { $group: { _id: "$remark", count: { $sum: 1 } } },
-        { $project: { remark: "$_id", count: 1 } }
+        { $project: { remark: "$_id", count: 1 } },
+        undefined
       ).toArray();
       // const resl = await attendances.find(query).toArray();
-      // console.log(resl)
+      console.log(result);
       return result;
       // return resl;
     }catch (e) {

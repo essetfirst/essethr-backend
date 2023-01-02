@@ -1,5 +1,5 @@
 const chalk = require("chalk");
-const { ObjectID } = require("mongodb");
+const { ObjectID,ObjectId } = require("mongodb");
 
 const AttendanceDAO = require("./attendanceDAO");
 // const EmployeeDAO = require("./employeeDAO");
@@ -94,7 +94,7 @@ class PayrollDAO {
 
   static async getPayrollById(payrollId) {
     try {
-      const query = { _id: ObjectID(payrollId) };
+      const query = { _id: ObjectId(payrollId) };
       const pipeline = [
         { $match: query },
         {
@@ -162,7 +162,7 @@ class PayrollDAO {
     toDate = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
   }) {
     try {
-      // console.log(org,orgId,employees,fromDate,toDate)
+      // console.log(org,employees,fromDate,toDate)
       const orgFromDb = await OrgDAO.getOrgById(org || orgId);
       // console.log(
       //   "[payrollDAO:getPayrollHours]: Line 162 -> orgFromDb: ",
@@ -193,7 +193,7 @@ class PayrollDAO {
         {}
       );
       const keys = Object.keys(holidaysByDate)
-      console.log("Holidats By Date ",holidaysByDate)
+      // console.log("Holidats By Date ",holidaysByDate)
 
       let attendanceHoursByEmployee = {};
       let overtimeHoursByEmployee = {};
@@ -213,21 +213,17 @@ class PayrollDAO {
       // );
       // console.log(Object.values(attendanceFromDb))
       Object.values(attendanceFromDb).forEach(
-        ([{ employeeId, date, checkin, workedHours = 0, overtimeHours = 0, status }]) => {
-          console.log(checkin);
-          console.log("Come")
+        ([{ employeeId, date, checkin, workedHours= 0,overtimeHours=0 , status }]) => {
           const dates = new Date(checkin).toISOString().slice(11, 19)
-          var checkin = checkin? new Date(checkin).toISOString().slice(11, 19) : null
-          // const test = checkin <= "08:30:00" ? "9:00:00":new Date("09:00:00") - checkin - new Date("08:30:00");
-          // console.log(checkin,test);
-          // }
-          // if(checkout)
-            // console.log(checkoutTime)
-      
-          // const workedHours = checkin & checkout ? checkout-checkin:
-          const isHoliday = keys.filter((h)=> h == date)
-          // console.log(isHoliday.length,isHoliday)
-          // console.log(employeeId,date,workedHours)
+          var checkin = checkin ? new Date(checkin).toISOString().slice(11, 19) : null
+          const [hour, min, sec] = checkin.split(":")
+          const changedMin = ((min) / 60).toFixed(1) - 0.5;
+          const test = checkin <= "08:30:00" ? 8 :(8-((hour-8)%12))+changedMin;
+          workedHours = Math.abs(test);
+          overtimeHours = workedHours > 8 ? (workedHours-8).toFixed(2): 0
+          console.log(employeeId,workedHours,overtimeHours)
+          const isHoliday = keys.filter((h) => h == date)
+          // console.log(isHoliday)c
           if (isHoliday.length) {
             console.log("true")
             overtimeHoursByEmployee = {
@@ -239,7 +235,7 @@ class PayrollDAO {
                 : overtimeHours,
             };
           } else {
-            console.log("false");
+            // console.log("false");
             attendanceHoursByEmployee = {
               ...attendanceHoursByEmployee,
               [employeeId]: attendanceHoursByEmployee[employeeId]
@@ -247,6 +243,8 @@ class PayrollDAO {
                 : workedHours,
             };
           }
+          // console.log(attendanceHoursByEmployee,overtimeHoursByEmployee);
+
           if (status !== "approved") {
             payrollHoursStatus = "pending";
           }
@@ -282,16 +280,24 @@ class PayrollDAO {
           image,
           position,
           phone,
+          isAttendanceRequired,
+          deductCostShare,
           hireDate,
         }) => {
-          const regular = attendanceHoursByEmployee[_id] || 0;
+          const regular = isAttendanceRequired ? 8 :attendanceHoursByEmployee[_id] || 0;
           const leave = leaveHoursByEmployee[_id] || 0;
           const overtime = overtimeHoursByEmployee[_id] || 0;
 
           // console.log(
-          //   "[payrollDAO:getPayrollHours]: Line 254 -> overtime, leave, regular",
-          //   `${overtime}, ${leave} ${regular}`
+          //   "[payrollDAO:getPayrollHours]: Line 254 -> ",
+          //   isAttendanceRequired, [attendanceHoursByEmployee[_id], regular],
+          //   [overtimeHoursByEmployee[_id],overtime]
           // );
+          const posSalary = positionsMap[position]
+            ? positionsMap[position].salary
+            : 0;
+          // console.log(posSalary)
+          // console.log(`${firstName}  ${surName} ${lastName}`,isAttendanceRequired,deductCostShare)
 
           return {
             employeeId: _id,
@@ -303,10 +309,12 @@ class PayrollDAO {
             organization: orgFromDb.name,
             fromDate,
             toDate,
-            
             regular,
             leave,
             overtime,
+            isAttendanceRequired,
+            deductCostShare,
+            monthlySalary: posSalary,
             status: payrollHoursStatus,
           };
         }
@@ -333,7 +341,7 @@ class PayrollDAO {
       //   "[payrollDAO:generatePayroll]: Line 284 -> Employees: ",
       //   employees
       // );
-      // console.log("Date range: ", fromDate, toDate,employees,org,title);
+      // console.log("Date range: ", fromDate, toDate,employees,payDate,title);
       const dateRangeInDays =
         ((new Date().getTime(toDate) - new Date(fromDate).getTime()) / 24) *
         3600000;
@@ -353,23 +361,22 @@ class PayrollDAO {
       let totalPayment = 0;
 
       const payslips = payrollHours.map(
-        ({ regular, leave, overtime, status, employeePosition, ...rest }) => {
-          console.log(
-            "[payrollDAO:generatePayroll]: Line 332 -> Employee salary: ",
-            employeePosition
-          );
-          const { salary } = employeePosition;
+        ({ regular, leave, overtime, status, employeePosition,monthlySalary,isAttendanceRequired,deductCostShare,...rest }) => {
+          // console.log(
+          //   "[payrollDAO:generatePayroll]: Line 332 -> Employee salary: ",
+          //   regular,leave,overtime
+          // );
+          // const salary = monthlySalary ? monthlySalary : 0;
+          const salary = monthlySalary ? monthlySalary : 0
 
           const hourlyRate = roundNumber(salary / (8 * 30));
-
           // Todo: Create payslip only if payrollHours status is approved
-
           const earnings = [
             {
               desc: "Regular",
               rate: hourlyRate,
               hours: regular,
-              amount: roundNumber(hourlyRate * regular),
+              amount: isAttendanceRequired ? monthlySalary:roundNumber(hourlyRate * regular),
             },
             {
               desc: "Paid Leave",
@@ -384,12 +391,15 @@ class PayrollDAO {
               amount: roundNumber(hourlyRate * overtime),
             },
           ];
+
           const earningsTotal = roundNumber(
             earnings.reduce((prev, n) => prev + n.amount, 0)
           );
           const grossIncome = earningsTotal;
+          console.log(grossIncome, earningsTotal,salary);
+          // console.log("MAL");
           const { taxRate, deduction } = computeIncomeTax(earningsTotal);
-          const deductions = [
+          let deductions = [
             {
               desc: "Income Tax",
               rate: taxRate,
@@ -399,15 +409,19 @@ class PayrollDAO {
               desc: "Pension",
               rate: 0.7,
               amount: roundNumber(grossIncome * (1 - 0.7)),
-            },
+            }
           ];
+          if (deductCostShare) {
+             deductions.push({desc:"CostShare",rate: 0.01,amount:roundNumber(grossIncome*rate)}) 
+          }
+          // const costShare = {desc:"CostShare",rate:0.1,amount:roundNumber(grossIncome*rate)}
+          // console.log("Cost share --- ",deductions)
           const deductionsTotal = roundNumber(
             deductions.reduce((prev, n) => prev + n.amount, 0)
           );
-
           const netPayment = roundNumber(earningsTotal - deductionsTotal);
-
           totalPayment += netPayment;
+          console.log(earningsTotal,deductionsTotal,netPayment,totalPayment)
 
           return {
             ...rest,
@@ -424,30 +438,30 @@ class PayrollDAO {
           };
         }
       );
-
+      const payTitle = new Date(payDate).toUTCString();
       const payrollInfo = {
         org,
-        title,
+        title:title?title:`${payType}-Payroll By ${payTitle}}`,
         employeesCount: payrollHours.length,
         totalPayment,
         fromDate,
         toDate,
         payDate,
         frequency: [28, 31, 20, 29].includes(dateRangeInDays)
-          ? "Monthly"
-          : dateRangeInDays === 14
-          ? "Bi-Weekly"
-          : dateRangeInDays === 7
-          ? "Weekly"
-          : "Custom",
+        ? "Monthly"
+        : dateRangeInDays === 14
+        ? "Bi-Weekly"
+        : dateRangeInDays === 7
+        ? "Weekly"
+        : "Custom",
         payType:
-          payType && payType.toLowerCase() === "daily" ? "Daily" : "Hourly",
+        payType && payType.toLowerCase() === "daily" ? "Daily" : "Hourly",
         status: "pending",
       };
-
+      
+      // console.log(payrollInfo)
       // Register payroll to database
       const payrollResult = await PayrollDAO.addPayroll(payrollInfo);
-
       // Register payslips to database
       await PayslipDAO.importPayslips(
         payslips.map((p) => ({
@@ -756,7 +770,7 @@ class PayrollDAO {
         ((new Date().getTime(toDate) - new Date(fromDate).getTime()) / 24) *
         3600000;
 
-      console.log(dateRangeInDays)
+      // console.log(dateRangeInDays)
       const payrollDetails = {
         fromDate,
         toDate,
