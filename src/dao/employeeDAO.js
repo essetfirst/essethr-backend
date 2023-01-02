@@ -1,6 +1,5 @@
 const { min } = require("moment/moment");
 const { ObjectID, ObjectId } = require("mongodb");
-const { INTEGER } = require("sequelize");
 // const { all } = require("../routes/employee.route");
 const { LeaveAllowanceDAO } = require("./leaveDAO");
 
@@ -209,7 +208,7 @@ class EmployeeDAO {
 
   static async getEmployeeById(employeeId) {
     try {
-      const query = { _id: ObjectID(employeeId) };
+      const query = { _id: ObjectId(employeeId) };
       return await employees.findOne(query);
     } catch (e) {
       console.error(`Unable to fetch employee by id, ${e}`);
