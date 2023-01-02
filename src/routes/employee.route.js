@@ -2,6 +2,7 @@ const router = require("express").Router();
 const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
 const authenticate = require("../middlewares/authenticate");
+const fileUpload = require("../middlewares/fileUpload");
 
 const EmployeeCtrl = require("../controllers/employee.controller");
 
@@ -14,7 +15,7 @@ router.route("/filter").get(EmployeeCtrl.apiFilterEmployees);
 router
   .route("/")
   .get(authenticate,EmployeeCtrl.apiGetEmployees)
-  .post(authenticate, upload.single("image"), EmployeeCtrl.apiCreateEmployee);
+  .post(authenticate, EmployeeCtrl.apiCreateEmployee);
       
 router
   .route("/:id")
