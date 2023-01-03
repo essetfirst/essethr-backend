@@ -1,6 +1,7 @@
 // const { OrgDAO } = require("../dao");
 const { query } = require("express");
 const { date } = require("joi");
+const { ObjectId } = require("mongodb");
 const AttendanceDAO = require("../dao/attendanceDAO");
 const EmployeeDAO = require("../dao/employeeDAO");
 
@@ -34,7 +35,8 @@ class AttendanceController {
     // if (req.body) {
     const date = new Date();
     const filter = {
-      orgId: req.org,
+      orgId: req.org
+      // checkin:{$exists:true}
     };
     console.log(filter);
     const result = await AttendanceDAO.getAllAttendances(filter);
@@ -236,7 +238,7 @@ class AttendanceController {
 
   static async apiGetReport(req, res) {
     const result = await AttendanceDAO.getReport({
-      orgId: String(req.org),
+      orgId: ObjectId(req.org),
       fromDate: req.body.fromDate,
       toDate: req.body.toDate,
     });
@@ -254,8 +256,12 @@ class AttendanceController {
     });
   }
   static async apiGetDailyReport(req, res) {
-    let result = await AttendanceDAO.getDailyReport({
-      orgId: String(req.org)
+          const today = new Date().toJSON().slice(0, 10).replace(/-/g, "-");
+
+    let result = await AttendanceDAO.getReport({
+      orgId: ObjectId(req.org),
+      fromDate: today,
+      toDate:today
     });
     console.log(result)
     // const empCount = await EmployeeDAO.getEmployees({ org: String(req.org) });

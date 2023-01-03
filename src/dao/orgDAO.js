@@ -327,7 +327,7 @@ class OrgDAO {
   static async updateOrg(orgInfo) {
     try {
       const { _id, slug, ...rest } = orgInfo;
-      let query = { _id: ObjectID(_id) };
+      let query = { _id: ObjectId(_id) };
       let update = { $set: { ...rest } };
       return await orgs.updateOne(query, update);
     } catch (e) {
@@ -339,7 +339,7 @@ class OrgDAO {
   static async deleteOrg(orgId) {
     try {
       // TODO: delete all employees, departments, positions, policies, users, etc
-      let query = { _id: ObjectID(orgId) };
+      let query = { _id: ObjectId(orgId) };
       return await orgs.deleteOne(query);
     } catch (e) {
       console.error(chalk.redBright(`Error deleting org record, ${e}`));
@@ -359,7 +359,7 @@ class OrgDAO {
 
   static async getAttendancePolicy(id) {
     try {
-      let query = { _id: ObjectID(id) };
+      let query = { _id: ObjectId(id) };
       const result = await orgs.findOne(query);
       return result.attendancePolicy;
     } catch (e) {
@@ -372,7 +372,7 @@ class OrgDAO {
 
   static async updateAttendancePolicy(id, attendancePolicy) {
     try {
-      let query = { _id: ObjectID(id) };
+      let query = { _id: ObjectId(id) };
       let update = {
         $set: {
           attendancePolicy: {

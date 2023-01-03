@@ -36,7 +36,7 @@ class HolidayDAO {
 
   static async getHolidayById(holidayId) {
     try {
-      let query = { _id: ObjectID(holidayId) };
+      let query = { _id: ObjectId(holidayId) };
       return await holidays.findOne(query);
     } catch (e) {
       console.error(`Error fetching holiday by id, ${e}`);
@@ -76,7 +76,7 @@ class HolidayDAO {
 
   static async updateHolidaay({ _id, ...rest }) {
     try {
-      const query = { _id: ObjectID(_id) };
+      const query = { _id: ObjectId(_id) };
       const update = { $set: { ...rest } };
       return await holidays.updateOne(query, update);
     } catch (e) {
@@ -87,7 +87,7 @@ class HolidayDAO {
 
   static async deleteHoliday({ _id, ...rest }) {
     try {
-      const query = { _id: ObjectID(_id), ...rest };
+      const query = { _id: ObjectId(_id), ...rest };
       return await holidays.deleteOne(query);
     } catch (e) {
       console.error(`Error occurred while deleting holiday record, ${e}`);

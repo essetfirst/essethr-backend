@@ -79,14 +79,15 @@ class LeaveController {
     
   
   static async apiGetLeaveById(req, res) {
-    const result = await LeaveDAO.getLeaveById(req.params.id);
+    const result = await LeaveDAO.getLeaveById({ id: req.params.id });
+    // console.log(result)
 
-    if (result.error) {
-      return res.status(result.server ? 500 : 400).json({
+    if (!(result && result !== 'null' && result !== 'undefined')) {
+      return res.status(result ? 500 : 400).json({
         success: false,
-        error: result.server
+        error: false
           ? "Internal error, try again later."
-          : result.error,
+          : "something went wrong",
       });
     }
 

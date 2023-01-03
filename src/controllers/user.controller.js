@@ -319,12 +319,22 @@ class UserController {
   static async apiUpdateUser(req, res) {
     try {
       const { password, ...rest } = req.body;
-      const result = await UserDAO.updateUser({
-        _id: req.params.id,
-        password: password,
-        passwordHash: await bcrypt.hash(password),
-        ...rest,
-      });
+      var result;
+      console.log(req.params.id)
+      if (password) {
+        result = await UserDAO.updateUser({
+          _id: req.params.id,
+          password: await bcrypt.hash(password,8),
+          ...rest,
+        });
+    
+      } else {
+           result = await UserDAO.updateUser({
+            _id: req.params.id,
+            ...rest,
+          });
+
+      }
 
       if (result.error) {
         return res.status(result.server ? 500 : 400).json({

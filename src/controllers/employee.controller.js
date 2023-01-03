@@ -9,7 +9,7 @@ const { parse, stringify, toJSON, fromJSON } = require("flatted");
 class EmployeeController {
   static async apiGetEmployees(req, res) {
     // console.log("Alol");
-    const { page = 1, limit = 10, ...rest } = req.query;
+    const { page = 1, limit = 20, ...rest } = req.query;
     const query = {
       page,
       limit,
@@ -32,11 +32,11 @@ class EmployeeController {
   }
 
   static async apiGetEmployeeById(req, res) {
-    const result = await EmployeeDAO.getEmployeeById(req.params.id);
-    if (result.error) {
+    const result = await EmployeeDAO.getEmployeeById({ id: req.params.id });
+    if (!(result && result !== "null" && result !== "undefined")) {
       return res
-        .status(result.server ? 500 : 400)
-        .json({ success: false, error: result.server ? null : result.error });
+        .status(500)
+        .json({ success: false, error: "something went wrong" });
     }
     return res.json({
       success: true,
@@ -70,7 +70,7 @@ class EmployeeController {
     
     // const allPaths = { IdCard: paths[0], degree: paths[1], masters: paths[2], support: paths[3] }
     // const allData = { ...req.body, ...allPaths }
-    console.log({ org: req.org, ...req.body })
+    console.log({ org: String(req.org), ...req.body })
     const { isAttendanceRequired, deductCostShare } = req.body;
     
     const result = await EmployeeDAO.createEmployee({
@@ -90,8 +90,8 @@ class EmployeeController {
 
       return res.status(201).json({
         success: true,
-        employee,
         message: "New employee profile created",
+        employee
       });
     }
   }
