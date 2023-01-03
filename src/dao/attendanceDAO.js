@@ -403,8 +403,14 @@ class AttendanceDAO {
       }
 
       const date = extractDateString(time);
+      const isCheckin = await attendances.findOne({
+        orgId,
+        employeeId,
+        date,
+      });
+      // console.log(isCheckin,date)
 
-      if (await attendances.findOne({ orgId, employeeId, date })) {
+      if (isCheckin) {
         return { error: "Employee already checked in!" };
       }
 
@@ -498,7 +504,6 @@ class AttendanceDAO {
         },
       };
 
-      
       if (employees.length > 0) {
         query.employeeId = { $in: employees };
       }
@@ -588,10 +593,7 @@ class AttendanceDAO {
   static async getAllAttendances(filterCriteria) {
     try {
       // TODO: implementation of org based attendance
-      const {
-        orgId,
-        org
-      } = filterCriteria;
+      const { orgId, org } = filterCriteria;
 
       let query = {
         orgId: String(orgId || org) || ObjectID(orgId || org),
@@ -693,10 +695,10 @@ class AttendanceDAO {
         employees = [],
         today = extractDateString(new Date()),
       } = filterCriteria;
-      // console.log(orgId);
+      console.log(orgId, today);
 
       let query = {
-        orgId: String(orgId),
+        orgId: ObjectId(orgId),
         date: today,
       };
 
@@ -904,7 +906,7 @@ class AttendanceDAO {
         console.log(fileInfo);
         const csv = new ObjectsToCsv(data);
         await csv.toDisk(
-          path.join(__dirname, "../uploads/attendance/", fileInfo)
+          path.join(__dirname, "../../uploads/attendance", fileInfo)
         );
         return true;
       } else {
@@ -940,29 +942,29 @@ class AttendanceDAO {
       return { error: e, server: true };
     }
   }
-  static async getDailyReport(filterCriteria={}) {
+  static async getDailyReport(filterCriteria = {}) {
     try {
       const { orgId } = filterCriteria;
       const today = new Date().toJSON().slice(0, 10).replace(/-/g, "-");
-       let query = {
-         orgId: String(orgId),
-         date:"2021-10-20",
+      let query = {
+        orgId: String(orgId),
+        date: "2021-10-20",
       };
       console.log(query);
-      const result = await attendances.aggregate(
-        { $match: query},
-        { $group: { _id: "$remark", count: { $sum: 1 } } },
-        { $project: { remark: "$_id", count: 1 } },
-        undefined
-      ).toArray();
+      const result = await attendances
+        .aggregate(
+          { $match: query },
+          { $group: { _id: "$remark", count: { $sum: 1 } } },
+          { $project: { remark: "$_id", count: 1 } },
+          undefined
+        )
+        .toArray();
       // const resl = await attendances.find(query).toArray();
       console.log(result);
       return result;
       // return resl;
-    }catch (e) {
-      console.error(
-        chalk.redBright(`Unable to get attendance report, ${e}`)
-      );
+    } catch (e) {
+      console.error(chalk.redBright(`Unable to get attendance report, ${e}`));
       return { error: e, server: true };
     }
   }

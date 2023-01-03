@@ -21,7 +21,7 @@ let client;
 
 async function startDb() {
   client = new MongoClient(
-    prodMongodbURI,
+    devMongodbURI,
     // process.env.NODE_ENV !== "production" ? devMongodbURI : prodMongodbURI,
     {
       useNewUrlParser: true,
