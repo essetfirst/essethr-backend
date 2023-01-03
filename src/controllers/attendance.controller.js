@@ -257,11 +257,12 @@ class AttendanceController {
     let result = await AttendanceDAO.getDailyReport({
       orgId: String(req.org)
     });
-    const empCount = await EmployeeDAO.getEmployees({ org: String(req.org) });
-    const resultLength = result.map((item) => item.count).reduce((prev, next) => prev + next);
-    const absentCount = empCount.length > resultLength ? empCount.length - resultLength : 0;
-    const absent = { "_id": "absent", "count": absentCount };
-    result.push(absent)
+    console.log(result)
+    // const empCount = await EmployeeDAO.getEmployees({ org: String(req.org) });
+    // const resultLength = result.map((item) => item.count).reduce((prev, next) => prev + next);
+    // const absentCount = empCount.length > resultLength ? empCount.length - resultLength : 0;
+    // const absent = { "_id": "absent", "count": absentCount };
+    // result.push(absent)
 
     if (result.error) {
       return res.status(result.server ? 500 : 400).json({
@@ -271,7 +272,7 @@ class AttendanceController {
     }
     return res.json({
       success: true,
-      total:result.map((item) => item.count).reduce((prev, next) => prev + next),
+      // total:result.map((item) => item.count).reduce((prev, next) => prev + next),
       report: result
     });
   }

@@ -1,5 +1,5 @@
 const chalk = require("chalk");
-const { ObjectID } = require("mongodb");
+const { ObjectID,ObjectId } = require("mongodb");
 // const EmployeeDAO = require("./employeeDAO");
 let users;
 
@@ -131,7 +131,7 @@ class UserDAO {
 
   static async getUserById(userId) {
     try {
-      return await users.findOne({ _id: ObjectID(userId) });
+      return await users.findOne({ _id: ObjectId(userId) });
     } catch (e) {
       console.error(chalk.redBright(`Error fetching user by id, ${e.stack}`));
       return { error: e, server: true };
@@ -142,7 +142,7 @@ class UserDAO {
     try {
       const { id, accessToken, token, tokens, tokenAction, ...rest } = userInfo;
 
-      const query = { _id: ObjectID(id) };
+      const query = { _id: ObjectId(id) };
       let update = {
         $set: { ...rest, updatedOn: new Date().toISOString() },
       };

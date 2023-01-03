@@ -70,11 +70,15 @@ class EmployeeController {
     
     // const allPaths = { IdCard: paths[0], degree: paths[1], masters: paths[2], support: paths[3] }
     // const allData = { ...req.body, ...allPaths }
-    console.log({org:req.org,...req.body})
+    console.log({ org: req.org, ...req.body })
+    const { isAttendanceRequired, deductCostShare } = req.body;
     
     const result = await EmployeeDAO.createEmployee({
       org: String(req.org),
-      ...req.body
+      ...req.body,
+      isAttendanceRequired: req.body.isAttendanceRequired ? req.body.isAttendanceRequired : true,
+      deductCostShare:req.body.deductCostShare?req.body.deductCostShare:false
+
     });
 
     if (result.error) {
