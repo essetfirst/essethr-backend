@@ -1,7 +1,7 @@
 // const { OrgDAO } = require("../dao");
 const { query } = require("express");
 const { date } = require("joi");
-const { ObjectId } = require("mongodb");
+const { ObjectID,ObjectId } = require("mongodb");
 const AttendanceDAO = require("../dao/attendanceDAO");
 const EmployeeDAO = require("../dao/employeeDAO");
 
