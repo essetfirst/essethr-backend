@@ -17,7 +17,7 @@ const { computePayableHours } = require("../lib/computePayableHours");
 const OrgDAO = require("./orgDAO");
 const EmployeeDAO = require("./employeeDAO");
 const PayrollDateDAO = require("./payrollDateDAO");
-const { func, date } = require("joi");
+const { func, date, string } = require("joi");
 
 let attendances;
 
@@ -493,7 +493,7 @@ class AttendanceDAO {
       } = filterCriteria;
 
       let query = {
-        orgId: String(orgId || org) || ObjectID(orgId || org),
+        orgId: ObjectId(orgId || org) || String(orgId),
         date: {
           $gte: fromDate
             ? extractDateString(fromDate)
@@ -593,10 +593,14 @@ class AttendanceDAO {
   static async getAllAttendances(filterCriteria) {
     try {
       // TODO: implementation of org based attendance
-      const { orgId, org } = filterCriteria;
+      const { orgId, org,date } = filterCriteria;
 
       let query = {
-        orgId: String(orgId || org) || ObjectID(orgId || org),
+        orgId: ObjectId(orgId) || string(orgId),
+        date: date ? date : { $exists: true },
+        employeeId:false?true:{$exists:true}
+        // checkin: { $exists: true },
+        // status:{$exists:true}
       };
 
       console.log(query);
@@ -629,7 +633,7 @@ class AttendanceDAO {
       // const result = await attendances.aggregate(pipeline).toArray();
 
       const result = await attendances.find(query).toArray();
-      // console.log("Attendance result: ", result);
+      console.log("Attendance result: ", result.length);
       // let attendancePolicy = DEFAULT_ATTENDANCE_POLICY;
 
       // if (orgId) {
@@ -650,7 +654,7 @@ class AttendanceDAO {
       //   : attendancePolicy;
       //
       // }
-      console.log(result);
+      // console.log(result);
       return (
         result
           //   .map((attendance) => {
@@ -947,16 +951,15 @@ class AttendanceDAO {
       const { orgId } = filterCriteria;
       const today = new Date().toJSON().slice(0, 10).replace(/-/g, "-");
       let query = {
-        orgId: String(orgId),
-        date: "2021-10-20",
+        orgId: ObjectId(orgId),
+        date: today,
       };
       console.log(query);
       const result = await attendances
         .aggregate(
           { $match: query },
           { $group: { _id: "$remark", count: { $sum: 1 } } },
-          { $project: { remark: "$_id", count: 1 } },
-          undefined
+          { $project: { remark: "$_id", count: 1 } }
         )
         .toArray();
       // const resl = await attendances.find(query).toArray();

@@ -146,7 +146,7 @@ class EmployeeDAO {
     try {
       // Save employee to database
       const employee = await employees.insertOne(employeeInfo);
-      console.log(employee);
+      console.log(employeeInfo);
 
       // Allocate/Accrue leave entitlement/allowance to new employee
       await LeaveAllowanceDAO.allocateAllowance({
@@ -182,7 +182,7 @@ class EmployeeDAO {
 
       console.log("\nQuery: \n", query);
       let findPipeline = employees.find(query);
-      console.log(findPipeline);
+      // console.log(findPipeline);
       if (limit) {
         findPipeline = findPipeline.limit(limit);
       }
@@ -206,9 +206,11 @@ class EmployeeDAO {
     }
   }
 
-  static async getEmployeeById(employeeId) {
+  static async getEmployeeById(employeeId ) {
     try {
-      const query = { _id: ObjectId(employeeId) };
+      const { id }= employeeId
+      const query = { _id: ObjectId(id) };
+      console.log(id,employeeId)
       return await employees.findOne(query);
     } catch (e) {
       console.error(`Unable to fetch employee by id, ${e}`);
@@ -218,7 +220,7 @@ class EmployeeDAO {
 
   static async getEmployeeDetailsById(employeeId) {
     try {
-      const query = { _id: ObjectID(employeeId) };
+      const query = { _id: ObjectId(employeeId) };
       const pipeline = [
         { $match: query },
         { $set: { _id: { $toString: "$_id" } } },
@@ -318,7 +320,7 @@ class EmployeeDAO {
   static async updateEmployee(employeeInfo = {}) {
     try {
       const { _id, ...rest } = employeeInfo;
-      let query = { _id: ObjectID(_id) };
+      let query = { _id: ObjectId(_id) };
       let update = { $set: { ...rest } };
       return await employees.updateOne(query, update);
     } catch (e) {
@@ -329,7 +331,7 @@ class EmployeeDAO {
 
   static async deleteEmployee(employeeId) {
     try {
-      return await employees.deleteOne({ _id: ObjectID(employeeId) });
+      return await employees.deleteOne({ _id: ObjectId(employeeId) });
     } catch (e) {
       console.error(`Unable to delete single employee record, ${e}`);
       return { error: e };

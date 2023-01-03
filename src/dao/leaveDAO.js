@@ -1,6 +1,6 @@
 const path = require("path");
 const chalk = require("chalk");
-const { ObjectID } = require("mongodb");
+const { ObjectID,ObjectId } = require("mongodb");
 const ObjectsToCsv = require("objects-to-csv");
 
 let leaves;
@@ -111,7 +111,8 @@ class LeaveDAO {
   }
   static async getLeaveById(leaveId) {
     try {
-      const query = { _id: ObjectID(leaveId) };
+      const query = { _id: ObjectId(leaveId.id) };
+      // console.log(query,leaveId,leaveId.id);
       return await leaves.findOne(query);
 
       // const pipeline = [
@@ -165,7 +166,7 @@ class LeaveDAO {
   static async updateLeave(leaveInfo) {
     try {
       const { id, org, status = "pending", ...rest } = leaveInfo;
-      const query = { _id: ObjectID(id) };
+      const query = { _id: ObjectId(id) };
 
       const update = {
         $set: {
@@ -262,7 +263,7 @@ class LeaveDAO {
 
   static async deleteLeave(leaveId) {
     try {
-      const query = { _id: ObjectID(leaveId) };
+      const query = { _id: ObjectId(leaveId) };
       return await leaves.deleteOne(query);
     } catch (e) {
       console.error(chalk.redBright(`Unable to delete leave record, ${e}`));
