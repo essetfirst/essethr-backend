@@ -56,7 +56,7 @@ class DepartmentController {
 
     return res.status(201).json({
       success: true,
-      department: result.ops[0],
+      department: result.ops?result.ops:result,
       message: "New department created!",
     });
   }

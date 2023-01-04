@@ -1,4 +1,4 @@
-const { ObjectID} = require("mongodb");
+const { ObjectID,ObjectId} = require("mongodb");
 
 let leaveTypes;
 
@@ -65,7 +65,7 @@ class LeaveTypeDAO {
 
   static async getById(leaveTypeId) {
     try {
-      let query = { _id: ObjectID(leaveTypeId) };
+      let query = { _id: ObjectId(leaveTypeId) };
       return await leaveTypes.findOne(query);
     } catch (e) {
       console.error(`Error fetching leave types, ${e}`);
@@ -93,8 +93,10 @@ class LeaveTypeDAO {
 
   static async update({ _id, ...rest }) {
     try {
-      const query = { _id: ObjectID(_id) };
+      console.log(_id)
+      const query = { _id: ObjectId(_id) };
       const update = { $set: { ...rest } };
+      console.log(query,update)
       return await leaveTypes.updateOne(query, update);
     } catch (e) {
       console.error(`Error occurred while updating leave type record, ${e}`);
@@ -104,7 +106,7 @@ class LeaveTypeDAO {
 
   static async delete({ _id, ...rest }) {
     try {
-      const query = { _id: ObjectID(_id), ...rest };
+      const query = { _id: ObjectId(_id), ...rest };
       return await leaveTypes.deleteOne(query);
     } catch (e) {
       console.error(`Error occurred while deleting leave type record, ${e}`);
