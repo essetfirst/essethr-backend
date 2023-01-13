@@ -47,7 +47,7 @@ class LeaveDAO {
       const end = to || toDate || endDate;
       // console.log(start, end);
       const query = {
-        org: String(org),
+        org: ObjectId(org),
         employeeId:
           employees.length > 0 ? { $in: employees } : { $exists: true },
         startDate: start
