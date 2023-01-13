@@ -33,10 +33,27 @@ let attendances;
  */
 
 function getRemark(t) {
-  return t <=
-    new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime()
-    ? "present"
-    : "late";
+  const date = new Date(t).getDay();
+  // console.log(date);
+  let remark;
+
+  if ( date != 0 && t <=
+    new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime()) {
+    return "present";
+  } else if (
+    ( t <= new Date(`${new Date(t).toISOString().slice(0, 10)} 05:00 PM`).getTime() &&
+      t > new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime() && date > 0 && date <= 5) ||
+    (t <=
+      new Date(
+        `${new Date(t).toISOString().slice(0, 10)} 12:00 AM`
+      ).getTime() &&
+      date == 6
+    )
+  ) {
+    return "late";
+  } else {
+    return "absent";
+  }
 }
 
 class AttendanceDAO {
@@ -414,6 +431,9 @@ class AttendanceDAO {
         return { error: "Employee already checked in!" };
       }
 
+      // const remarks = getRemark(time);
+      // console.log(remarks,date,extractDateTimeString(time));
+
       await attendances.insertOne({
         orgId,
         employeeId,
@@ -442,7 +462,6 @@ class AttendanceDAO {
       }
 
       const query = { orgId, employeeId, date };
-      const update = { $set: { checkout: time, device } };
 
       // TODO: compute attendance hours
 
@@ -450,10 +469,24 @@ class AttendanceDAO {
       // Add attended hours to payroll date
       const result = await attendances.findOne(query);
       console.log(result);
+      const checkin = result ? result.checkin : 0;
+      var difference = time - checkin;
+      
+      var hoursDifference = Math.floor(difference/1000/60/60);
+      difference -= hoursDifference * 1000 * 60 * 60
+      var minsDifference = Math.floor(difference/1000/60);
+      difference -= minsDifference * 1000 * 60 
+      var minComp = minsDifference / 60;
+      var workedHours = hoursDifference + minComp;
+      const wh = (x) => Math.round(x * 100) / 100;
+      const update = { $set: { checkout: time, device, workedHours: wh(workedHours) } };
+
+
       if (!result) {
         return { error: "You should checkin first!" };
       }
-      // console.log(computeHours(Date.now()-result.checkin))
+      // console.log(update,typeof f,typeof workedHours)
+      // console.log(workedHours,difference,hoursDifference,minsDifference,checkin, time);
       if (computeHours(Date.now() - result.checkin) < 1) {
         return { error: "You need to wait for at least an hour to checkout!" };
       }
@@ -593,12 +626,12 @@ class AttendanceDAO {
   static async getAllAttendances(filterCriteria) {
     try {
       // TODO: implementation of org based attendance
-      const { orgId, org,date } = filterCriteria;
+      const { orgId, org, date } = filterCriteria;
 
       let query = {
         orgId: ObjectId(orgId) || string(orgId),
         date: date ? date : { $exists: true },
-        employeeId:false?true:{$exists:true}
+        employeeId: false ? true : { $exists: true },
         // checkin: { $exists: true },
         // status:{$exists:true}
       };
@@ -697,7 +730,7 @@ class AttendanceDAO {
       const {
         orgId,
         employees = [],
-        today = extractDateString(new Date()),
+        today = extractDateString(new Date()),cl
       } = filterCriteria;
       console.log(orgId, today);
 
@@ -1058,5 +1091,7 @@ function extractDateString(date) {
 function extractTimeString(date) {
   return new Date(date).toISOString().slice(11, 19);
 }
-
+function extractDateTimeString(date) {
+  return new Date(date).toISOString();
+}
 module.exports = AttendanceDAO;

@@ -9,8 +9,8 @@ const attendanceStorage = multer.diskStorage({
   },
 
   fileFilter(req, file, cb) {
-    if (!file.originalname.match(/\.(csv|CSV|excel|EXCEL)$/)) {
-      return cb(new Error("Please upload a valid file"), false);
+    if (!file.originalname.match(/\.(xlsx|XLSX)$/)) {
+      return cb(new Error("Please upload a valid file like excel "), false);
     }
     cb(undefined, true);
   },
