@@ -3,14 +3,14 @@ const multer = require("multer");
 const attendanceStorage = multer.diskStorage({
   destination: "uploads/attendance",
   filename: (req, file, cb) => {
-    console.log(file);
+    // console.log(file);
     const ext = file.mimetype.split("/")[1];
-    cb(null, `Attendance-${Date.now()}.${ext}`);
+    cb(null, `attend--${Date.now()}.${ext}`);
   },
 
   fileFilter(req, file, cb) {
     if (!file.originalname.match(/\.(xlsx|XLSX)$/)) {
-      return cb(new Error("Please upload a valid file like excel "), false);
+      return cb(new Error("Please upload a valid file like excel only"), false);
     }
     cb(undefined, true);
   },

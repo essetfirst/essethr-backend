@@ -1,5 +1,5 @@
 const { performance } = require("perf_hooks");
-
+const readXlsxFile = require('read-excel-file/node')
 const chalk = require("chalk");
 const ObjectsToCsv = require("objects-to-csv");
 const { readFile } = require("fs").promises;
@@ -35,27 +35,22 @@ let attendances;
 function getRemark(t) {
   const date = new Date(t).getDay();
   // console.log(date);
-  // const a = t <= new Date(`${new Date(t).toISOString().slice(0, 10)} 05:00 PM`).getTime();
-  // const b = t <= new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime();
-  // const c =
-  //   t <=
-  //   new Date(
-  //     `${new Date(t).toISOString().slice(0, 10)} 12:00 PM`
-  //   ).getTime();
-  // console.log(date!=0 && b, date > 0 && date <= 5, a, b,c);
+  // const a = t <= new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime();
+  // const b = t > new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime();
+  // const c = t <= new Date(`${new Date(t).toISOString().slice(0, 10)} 12:00 PM`).getTime();
+  // const d = t <= new Date(`${new Date(t).toISOString().slice(0, 10)} 05:00 PM`).getTime();
+  // console.log(a,b,c,d,date,date!=0,date>0 && date<=5,date==6);
   let remark;
 
-  if ( date!= 0 && t <=
+  if ( date != 0 && t <=
     new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime()) {
     return "present";
   } else if (
     ( t <= new Date(`${new Date(t).toISOString().slice(0, 10)} 05:00 PM`).getTime() &&
       t > new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime() &&
-      date > 0 && date <= 5) ||
-    (t <=
-      new Date(
-        `${new Date(t).toISOString().slice(0, 10)} 12:00 PM`
-      ).getTime() &&
+      date > 0 && date <= 5)
+    ||
+    (t <=new Date(`${new Date(t).toISOString().slice(0, 10)} 12:00 PM`).getTime() &&
       date == 6
     )
   ) {
@@ -441,7 +436,7 @@ class AttendanceDAO {
       }
 
       const remarks = getRemark(time);
-      console.log(remarks,date,extractDateTimeString(time));
+      console.log(remarks);
 
       await attendances.insertOne({
         orgId,
@@ -894,44 +889,43 @@ class AttendanceDAO {
 
   static async importAttendance(fileInfo) {
     try {
-      const { filename } = fileInfo;
-      console.log(filename);
+      const { filename ,orgId} = fileInfo;
+      console.log(filename.path,orgId);
       const results = [];
       var Alldata = [];
-      fs.createReadStream(filename)
-        .pipe(csv({}))
-        .on("data", (data) => results.push(data))
-        .on(
-          "end",
-          async () => {
-            for (const result of results) {
-              const {
-                date,
-                employeeId,
-                checkin,
-                device,
-                orgId,
-                remark,
-                status,
-                checkout,
-              } = result;
-              Alldata.push({
-                date,
-                employeeId,
-                checkin,
-                device,
-                orgId,
-                remark,
-                status,
-                checkout,
-              });
-            }
-            // console.log(Alldata);
-            return await attendances.insertMany(Alldata);
-          }
-          // //  console.log(result);
-        );
-      // console.log(Alldata)
+      readXlsxFile(fs.createReadStream(filename.path)).then(async(rows) => {
+        // `rows` is an array of rows
+        // each row being an array of cells.
+        const [j, ...rest] = rows;
+        for (const dat of rest) {
+          const [a, b, c, d, e, f, g, h] = dat;
+          const current = {
+            date: a,
+            employeeId: b,
+            checkin: d,
+            checkout: e,
+            orgId,
+            workedHours: f,
+            remark: g,
+            status: h,
+          };
+          // console.log(current);
+          Alldata.push({
+            date: a,
+            employeeId: b,
+            checkin: d,
+            checkout: e,
+            orgId,
+            workedHours: f,
+            remark: g,
+            status: h,
+          });
+          // console.log("-----");
+        }
+        // console.log(Alldata, Alldata.length);
+        return await attendances.insertMany(Alldata);
+      });
+      // console.log(Alldata,'=',Alldata.length)
       return true;
     } catch (e) {
       console.error(
