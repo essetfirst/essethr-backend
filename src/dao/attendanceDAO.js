@@ -35,17 +35,26 @@ let attendances;
 function getRemark(t) {
   const date = new Date(t).getDay();
   // console.log(date);
+  // const a = t <= new Date(`${new Date(t).toISOString().slice(0, 10)} 05:00 PM`).getTime();
+  // const b = t <= new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime();
+  // const c =
+  //   t <=
+  //   new Date(
+  //     `${new Date(t).toISOString().slice(0, 10)} 12:00 PM`
+  //   ).getTime();
+  // console.log(date!=0 && b, date > 0 && date <= 5, a, b,c);
   let remark;
 
-  if ( date != 0 && t <=
+  if ( date!= 0 && t <=
     new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime()) {
     return "present";
   } else if (
     ( t <= new Date(`${new Date(t).toISOString().slice(0, 10)} 05:00 PM`).getTime() &&
-      t > new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime() && date > 0 && date <= 5) ||
+      t > new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime() &&
+      date > 0 && date <= 5) ||
     (t <=
       new Date(
-        `${new Date(t).toISOString().slice(0, 10)} 12:00 AM`
+        `${new Date(t).toISOString().slice(0, 10)} 12:00 PM`
       ).getTime() &&
       date == 6
     )
@@ -431,8 +440,8 @@ class AttendanceDAO {
         return { error: "Employee already checked in!" };
       }
 
-      // const remarks = getRemark(time);
-      // console.log(remarks,date,extractDateTimeString(time));
+      const remarks = getRemark(time);
+      console.log(remarks,date,extractDateTimeString(time));
 
       await attendances.insertOne({
         orgId,
