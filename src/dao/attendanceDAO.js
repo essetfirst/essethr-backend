@@ -1,5 +1,5 @@
 const { performance } = require("perf_hooks");
-
+const readXlsxFile = require('read-excel-file/node')
 const chalk = require("chalk");
 const ObjectsToCsv = require("objects-to-csv");
 const { readFile } = require("fs").promises;
@@ -889,44 +889,43 @@ class AttendanceDAO {
 
   static async importAttendance(fileInfo) {
     try {
-      const { filename } = fileInfo;
-      console.log(filename);
+      const { filename ,orgId} = fileInfo;
+      console.log(filename.path,orgId);
       const results = [];
       var Alldata = [];
-      fs.createReadStream(filename)
-        .pipe(csv({}))
-        .on("data", (data) => results.push(data))
-        .on(
-          "end",
-          async () => {
-            for (const result of results) {
-              const {
-                date,
-                employeeId,
-                checkin,
-                device,
-                orgId,
-                remark,
-                status,
-                checkout,
-              } = result;
-              Alldata.push({
-                date,
-                employeeId,
-                checkin,
-                device,
-                orgId,
-                remark,
-                status,
-                checkout,
-              });
-            }
-            // console.log(Alldata);
-            return await attendances.insertMany(Alldata);
-          }
-          // //  console.log(result);
-        );
-      // console.log(Alldata)
+      readXlsxFile(fs.createReadStream(filename.path)).then(async(rows) => {
+        // `rows` is an array of rows
+        // each row being an array of cells.
+        const [j, ...rest] = rows;
+        for (const dat of rest) {
+          const [a, b, c, d, e, f, g, h] = dat;
+          const current = {
+            date: a,
+            employeeId: b,
+            checkin: d,
+            checkout: e,
+            orgId,
+            workedHours: f,
+            remark: g,
+            status: h,
+          };
+          // console.log(current);
+          Alldata.push({
+            date: a,
+            employeeId: b,
+            checkin: d,
+            checkout: e,
+            orgId,
+            workedHours: f,
+            remark: g,
+            status: h,
+          });
+          // console.log("-----");
+        }
+        // console.log(Alldata, Alldata.length);
+        return await attendances.insertMany(Alldata);
+      });
+      // console.log(Alldata,'=',Alldata.length)
       return true;
     } catch (e) {
       console.error(

@@ -284,8 +284,10 @@ class AttendanceController {
   }
   static async apiImportAttendace(req, res) {
     const file = req.file;
+    // console.log(file)
     const result = await AttendanceDAO.importAttendance({
-      filename: file.path,
+      filename: file,
+      orgId:req.org
     });
     console.log(result);
     if (!result) {
