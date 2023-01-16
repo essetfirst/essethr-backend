@@ -65,7 +65,7 @@ class AuthController {
         activated: true,
         role: "ADMIN",
         org: orgId,
-        ...rest,
+        ...other,
       };
       console.log(newOrg,userInfo);
       const newUser = await UserDAO.createUser(userInfo);

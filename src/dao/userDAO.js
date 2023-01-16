@@ -70,7 +70,7 @@ class UserDAO {
     try {
       return await users.insertOne({
         ...userInfo,
-        name: userInfo.name || `${userInfo.firstName} ${userInfo.lastName}`,
+        name: `${userInfo.firstName} ${userInfo.lastName}`,
         createdOn: new Date().toISOString(),
       });
     } catch (e) {
