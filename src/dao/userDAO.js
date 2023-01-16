@@ -72,6 +72,7 @@ class UserDAO {
         ...userInfo,
         name: `${userInfo.firstName} ${userInfo.lastName}`,
         createdOn: new Date().toISOString(),
+        updatedOn: new Date().toISOString(),
       });
     } catch (e) {
       console.error(chalk.redBright(`Error creating user, ${e.stack}`));

@@ -18,7 +18,7 @@ class AuthController {
       const { user = {}, org = {} } = req.body;
 
       const { phone,orgEmail, ...rest } = org;
-      const { email, ...other } = user;
+      const { email,password ,...other } = user;
         console.log(orgEmail,phone);
 
       const phoneOrEmailExists = await OrgDAO.checkDuplicateEmailOrPhone(
@@ -58,7 +58,8 @@ class AuthController {
         });
       }
       const orgId = newOrg.insertedId;
-      const encodedPassword = await bcrypt.hash(user.password, 10);
+      const encodedPassword = await bcrypt.hash(password, 10);
+      console.log(password,encodedPassword)
       const userInfo = {
         email,
         password: encodedPassword,
