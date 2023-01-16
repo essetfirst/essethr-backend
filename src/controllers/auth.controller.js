@@ -5,6 +5,7 @@ const { sign, verify } = require("jsonwebtoken");
 const { jwtSecret } = require("../config").auth;
 const getSlug = require("../utils/getSlug");
 
+
 const {
   DEFAULT_ATTENDANCE_POLICY,
   DEFAULT_ETHIOPIAN_HOLIDAYS,
@@ -16,55 +17,60 @@ class AuthController {
     try {
       const { user = {}, org = {} } = req.body;
 
-      const { email, phone, password, ...rest } = user;
-        console.log("HELLO");
+      const { phone,orgEmail, ...rest } = org;
+      const { email,password ,...other } = user;
+        console.log(orgEmail,phone);
 
-      const phoneOrEmailExists = await UserDAO.checkDuplicateEmailOrPhone(
-        email,
+      const phoneOrEmailExists = await OrgDAO.checkDuplicateEmailOrPhone(
+        orgEmail,
         phone
       );
 
-      // console.log(phoneOrEmailExists);
+      console.log(phoneOrEmailExists);
       if (phoneOrEmailExists) {
         return res
           .status(400)
-          .json({ success: false, error: "Email already in use" });
+          .json({ success: false, error: "Email or Phone already in use" });
       }
       // Org name already taken
       const orgExists = await OrgDAO.getOrgBySlug(getSlug(org.name));
+      // console.log("----", Object.keys(orgExists).length);
+      console.log(orgExists);
       if (orgExists) {
         return res
           .status(400)
           .json({ success: false, error: "Organization name already in use" });
       }
       // Org creation
+      // console.log(org, user);
       const newOrg = await OrgDAO.createOrg({
         ...org,
         attendancePolicy: DEFAULT_ATTENDANCE_POLICY,
         holidays: DEFAULT_ETHIOPIAN_HOLIDAYS,
         createdBy: email,
       });
+      console.log(newOrg);
       // console.log(result);
-      if (!newOrg.ops) {
+      if (Object.keys(newOrg).length == 0 ) {
         return res.status(500).json({
           success: false,
           error: "Error Creating Org",
         });
       }
-      // console.log(result.insertedId);
       const orgId = newOrg.insertedId;
-      const encodedPassword = await bcrypt.hash(user.password, 10);
+      const encodedPassword = await bcrypt.hash(password, 10);
+      console.log(password,encodedPassword)
       const userInfo = {
         email,
         password: encodedPassword,
         activated: true,
         role: "ADMIN",
         org: orgId,
-        ...rest,
+        ...other,
       };
+      console.log(newOrg,userInfo);
       const newUser = await UserDAO.createUser(userInfo);
-
-      console.log(newOrg);
+      console.log(newUser);
       if (!newUser) {
         return res.status(500).json({
           success: true,

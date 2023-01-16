@@ -171,6 +171,24 @@ class OrgDAO {
     }
   }
 
+  static async checkDuplicateEmailOrPhone(orgEmail, phone) {
+    try {
+      const checkDuplicateEmailOrPhone = await orgs.findOne( { $or: [{ email:orgEmail}, { phone: phone } ] });
+
+      return checkDuplicateEmailOrPhone;
+
+      // return (
+      //   (await orgs.findOne({ email })) ||
+      //   (phone && (await orgs.findOne({ phone })))
+      // );
+    } catch (e) {
+      console.error(
+        chalk.redBright(`Error checking duplicate email or phone, ${e.stack}`)
+      );
+      return { error: e, server: true };
+    }
+  }
+
   static async getOrgs({ page, limit, ...rest } = {}) {
     try {
       let query = { ...rest };
