@@ -12,6 +12,8 @@ const employeeRoutes = require("./employee.route");
 const attendanceRoutes = require("./attendance.route");
 const leaveRoutes = require("./leaves.route");
 const payrollRoutes = require("./payroll.route");
+const inventoryRoutes = require("./inventory.routes");
+const { auth } = require("../config");
 
 router.use("/", signupRoutes);
 router.use("/health", healthRoutes);
@@ -22,5 +24,6 @@ router.use("/employees", authenticate, employeeRoutes);
 router.use("/attendance", authenticate, attendanceRoutes);
 router.use("/leaves", authenticate, leaveRoutes);
 router.use("/payrolls", authenticate, payrollRoutes);
+router.use("/inventory", authenticate, inventoryRoutes);
 
 module.exports = router;

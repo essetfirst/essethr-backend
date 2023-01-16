@@ -14,6 +14,7 @@ const PayrollDateDAO = require("./payrollDateDAO");
 const PayrollDAO = require("./payrollDAO");
 const PayslipDAO = require("./payslipDAO");
 const TimesheetDAO = require("./timesheetDAO");
+const { InventoryDAO } = require("./inventoryDAO");
 
 const ROLES = ["employee", "manager", "admin"];
 
@@ -44,6 +45,7 @@ async function startDb() {
   await LeaveAllowanceDAO.injectDB(db);
   await PayrollDateDAO.injectDB(db);
   await PayrollDAO.injectDB(db);
+  await InventoryDAO.injectDB(db);
 
   await PayslipDAO.injectDB(db);
   await TimesheetDAO.injectDB(db);

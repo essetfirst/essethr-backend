@@ -16,6 +16,36 @@ const attendanceStorage = multer.diskStorage({
   },
 });
 
+const productStorage = multer.diskStorage({
+  destination: "uploads/product",
+  filename: (req, file, cb) => {
+    // console.log(file);
+    const ext = file.mimetype.split("/")[1];
+    cb(null, file.originalname);
+  },
+
+  fileFilter(req, file, cb) {
+    if (!file.originalname.match(/\.(jpeg|JPEG|JPG|jpg|gif|GIF|png|PNG)$/)) {
+      return cb(new Error("Please upload a valid image filetype only"), false);
+    }
+    cb(undefined, true);
+  },
+});
+const CategoryStorage = multer.diskStorage({
+  destination: "uploads/category",
+  filename: (req, file, cb) => {
+    // console.log(file);
+    const ext = file.mimetype.split("/")[1];
+    cb(null, file.originalname);
+  },
+
+  fileFilter(req, file, cb) {
+    if (!file.originalname.match(/\.(jpeg|JPEG|JPG|jpg|gif|GIF|png|PNG)$/)) {
+      return cb(new Error("Please upload a valid image filetype only"), false);
+    }
+    cb(undefined, true);
+  },
+});
 const employeeStorage = multer.diskStorage({
   destination: "uploads/employees",
   filename: (req, file, cb) => {
@@ -31,7 +61,6 @@ const employeeStorage = multer.diskStorage({
     cb(undefined, true);
   },
 });
-
 
 const employeeIdStorage = multer.diskStorage({
   destination: "uploads/employees",
@@ -98,9 +127,22 @@ const employeeSupportStorage = multer.diskStorage({
 });
 
 exports.addEmployeeID = multer({ storage: employeeIdStorage }).any("card");
-exports.addEmployeeBachelor= multer({ storage: employeeDegreeStorage }).any("degree");
-exports.addEmployeeMasters = multer({ storage: employeeMasterStorage }).any("masters");
-exports.addEmployeeSupport = multer({ storage: employeeSupportStorage }).any("support");
+exports.addEmployeeBachelor = multer({ storage: employeeDegreeStorage }).any(
+  "degree"
+);
+exports.addEmployeeMasters = multer({ storage: employeeMasterStorage }).any(
+  "masters"
+);
+exports.addEmployeeSupport = multer({ storage: employeeSupportStorage }).any(
+  "support"
+);
 
-exports.addEmployeeCredentials = multer({ storage: employeeStorage }).array("images", 5);
-exports.importAttendance = multer({ storage: attendanceStorage }).single("file");
+exports.addEmployeeCredentials = multer({ storage: employeeStorage }).array(
+  "images",
+  5
+);
+exports.importAttendance = multer({ storage: attendanceStorage }).single(
+  "file"
+);
+exports.addProduct = multer({ storage: productStorage }).single("product");
+exports.addCategory = multer({ storage: CategoryStorage }).single("category");
