@@ -39,21 +39,20 @@ function getRemark(t) {
   // const b = t > new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime();
   // const c = t <= new Date(`${new Date(t).toISOString().slice(0, 10)} 12:00 PM`).getTime();
   // const d = t <= new Date(`${new Date(t).toISOString().slice(0, 10)} 05:00 PM`).getTime();
-  // console.log(a,b,c,d,date,date!=0,date>0 && date<=5,date==6);
+  // console.log(date,t)
+  console.log(a, date != 0,new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime())
+  console.log(b, d, date > 0 && date <= 5)
+  console.log(c,date == 6);
   let remark;
 
   if ( date != 0 && t <=
     new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime()) {
     return "present";
-  } else if (
-    ( t <= new Date(`${new Date(t).toISOString().slice(0, 10)} 05:00 PM`).getTime() &&
-      t > new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime() &&
-      date > 0 && date <= 5)
-    ||
-    (t <=new Date(`${new Date(t).toISOString().slice(0, 10)} 12:00 PM`).getTime() &&
-      date == 6
-    )
-  ) {
+  } else if ((t > new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime()) &&
+    (t <= new Date(`${new Date(t).toISOString().slice(0, 10)} 05:00 PM`).getTime() && date > 0 && date <= 5
+      || t <=new Date(`${new Date(t).toISOString().slice(0, 10)} 12:00 PM`).getTime() &&
+      date == 6)
+ ) {
     return "late";
   } else {
     return "absent";
