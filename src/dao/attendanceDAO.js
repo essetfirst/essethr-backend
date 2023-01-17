@@ -42,22 +42,33 @@ function getRemark(t) {
   // console.log(a,b,c,d,date,date!=0,date>0 && date<=5,date==6);
   let remark;
 
-  if ( date != 0 && t <=
-    new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime()) {
-    return "present";
-  } else if (
-    ( t <= new Date(`${new Date(t).toISOString().slice(0, 10)} 05:00 PM`).getTime() &&
-      t > new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime() &&
-      date > 0 && date <= 5)
-    ||
-    (t <=new Date(`${new Date(t).toISOString().slice(0, 10)} 12:00 PM`).getTime() &&
-      date == 6
-    )
-  ) {
-    return "late";
-  } else {
-    return "absent";
-  }
+   if (
+     date != 0 &&
+     t <=
+       new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime()
+   ) {
+     return "present";
+   } else if (
+     t >
+       new Date(
+         `${new Date(t).toISOString().slice(0, 10)} 08:30 AM`
+       ).getTime() &&
+     ((t <=
+       new Date(
+         `${new Date(t).toISOString().slice(0, 10)} 05:00 PM`
+       ).getTime() &&
+       date > 0 &&
+       date <= 5) ||
+       (t <=
+         new Date(
+           `${new Date(t).toISOString().slice(0, 10)} 12:00 PM`
+         ).getTime() &&
+         date == 6))
+   ) {
+     return "late";
+   } else {
+     return "absent";
+   }
 }
 
 class AttendanceDAO {
