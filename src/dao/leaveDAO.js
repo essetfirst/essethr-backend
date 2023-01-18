@@ -2,6 +2,7 @@ const path = require("path");
 const chalk = require("chalk");
 const { ObjectID,ObjectId } = require("mongodb");
 const ObjectsToCsv = require("objects-to-csv");
+const LeaveTypeDAO = require("./leaveTypeDAO");
 
 let leaves;
 let allowances;
@@ -253,7 +254,57 @@ class LeaveDAO {
           });
         }
       );
+      //Get Leave Id
+      const lId = result.upsertedIds || leaveIds[0];
+      console.log(lId)
+      const approveLeave = await leaves.findOne({ _id: ObjectId(lId) });
+      console.log(approveLeave)
+      // Get Leave Type,duration,employeeId
+       const {employeeId,leaveType,duration} = approveLeave
+      // Get Leave Name from leavetype
+      const leaveName = await LeaveTypeDAO.getById(leaveType);
+      console.log(leaveName);
+      const { name } = leaveName;
+      const leaveTypeName = (name) => {
+        if (name == "Compassionate Leave (Bereavement Leave)") {
+          return "special";
+        } else if (name == "Maternity Leave (Parental Leave)") {
+          return "maternal";
+        } else {
+          return "annual";
+        }
+      }
+      const names = leaveTypeName(name);
+      // call use allocated method
+      var useAllocated = { employees: [employeeId]}; 
+      useAllocated[names] = duration
+      console.log(useAllocated, name,duration,names)
+      const { employees = [], ...rest } = useAllocated;
+      const allowanceFields = Object.keys(rest)
+        .map((key) => ({
+          [`used.${key}`]: rest[key] ? rest[key] : 0,
+        }))
+        .reduce((obj, n) => {
+          obj = { ...obj, ...n };
+          return obj;
+        }, {});
+      console.log(allowanceFields);
+      const querys = {
+        employeeId:
+          employees.length > 1
+            ? { $in: [String(employees)] }
+            : String(employees[0]),
+      };
 
+      // console.log(query);
+      // const dt = await allowances.findOne(query);
+      // console.log(dt);
+      const update = {
+        $inc: allowanceFields,
+      };
+      console.log(update);
+      const res = await allowances.updateMany(querys, update);
+      console.log(res);
       return result;
     } catch (e) {
       console.error(chalk.redBright(`Unable to approve leave records, ${e}`));

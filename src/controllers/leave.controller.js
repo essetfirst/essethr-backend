@@ -131,7 +131,7 @@ class LeaveController {
     }
 
     return res.status(200).json({
-      success: result.upsertedCount > 0,
+      success: result.modifiedCount > 0,
       message: `${
         result.modifiedCount === 0
           ? "Leave could not be approved"
