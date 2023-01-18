@@ -220,7 +220,7 @@ class LeaveDAO {
 
   static async approveLeaves(filterCriteria = {}) {
     try {
-      console.log("[leaveDAO]: Line 196 -> filterCriteria: ", filterCriteria);
+      // console.log("[leaveDAO]: Line 196 -> filterCriteria: ", filterCriteria);
 
       const { leaveIds = [] } = filterCriteria;
       // console.log(leaveIds.length)
@@ -228,14 +228,14 @@ class LeaveDAO {
         _id:
           leaveIds.length > 1
             ? { $in: leaveIds.map((id) => ObjectID(id)) }
-            : ObjectID(leaveIds[0]),
+            : ObjectId(leaveIds[0]),
         status: { $ne: "approved" },
       };
       console.log(query);
       const result = await leaves.updateMany(query, {
         $set: { status: "approved" },
       });
-      // console.log(result)
+      console.log(result)
 
       const updatedLeaves = await leaves
         .find({
@@ -243,7 +243,7 @@ class LeaveDAO {
         })
         .toArray();
 
-      // console.log("[leaveDAO]: Line 217 -> updateLeaves: ", updatedLeaves);
+      console.log("[leaveDAO]: Line 217 -> updateLeaves: ", updatedLeaves);
 
       await updatedLeaves.forEach(
         async ({ employeeId, leaveType, duration }) => {
@@ -390,13 +390,19 @@ class LeaveAllowanceDAO {
 
   static async allocateAllowance(allowanceInfo) {
     try {
-      // console.log(allowanceInfo)
+      console.log(allowanceInfo)
       // console.log("Hello")
-      return await allowances.insertOne({
+      const isAllocated = await allowances.findOne(allowanceInfo);
+      console.log(isAllocated);
+      if (isAllocated) {
+        return false;
+      }
+      const allocate = await allowances.insertOne({
         ...allowanceInfo,
         allocated: { ...ethiopianYearlyPaidLeaveAllowance },
         used: { ...ethiopianLeaveTypesDefault },
       });
+      return true;
     } catch (e) {
       console.error(
         chalk.redBright(`Unable to allocate leave allowance, ${e}`)

@@ -7,10 +7,10 @@ class LeaveController {
       leaveAllowanceInfo
     );
     console.log(result);
-    if (result.error) {
+    if (!result) {
       return res
         .status(500)
-        .json({ success: false, error: "Internal error, try again later." });
+        .json({ success: false, error: "Already allocated , or Internal error. " });
     }
     return res.status(201).json({
       success: true,
