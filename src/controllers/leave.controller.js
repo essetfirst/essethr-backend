@@ -37,7 +37,8 @@ class LeaveController {
   static async apiGetAllowances(req, res) {
     // console.log("Entering allowances handler...");
     const result = await LeaveAllowanceDAO.getAllowances();
-    // console.log("Entered allowances handler...");
+    console.log("Entered allowances handler...");
+    console.log(result);
     if (result.error) {
       return res
         .status(500)

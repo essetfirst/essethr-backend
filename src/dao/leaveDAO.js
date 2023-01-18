@@ -403,8 +403,22 @@ class LeaveAllowanceDAO {
 
   static async getAllowances(filterCriteria = {}) {
     try {
+      var returnData = []
       const query = {};
-      return await allowances.find(query).toArray();
+      const data = await allowances.find(query).toArray();
+      const newData = data.map((d) => {
+        const { used } = d;
+        const values = Object.values(used);
+        const sum = values.reduce((accumulator, value) => {
+          return accumulator + value;
+        }, 0);
+        const remaining = 79 - sum;
+        // console.log(remaining, values, sum,d);
+        returnData.push({ ...d, remaining: remaining });
+        return returnData;
+      })
+      console.log(newData,returnData)
+      return newData ;
     } catch (e) {
       console.error(chalk.redBright(`Unable to fetch leave allowances, ${e}`));
       return { error: e };
