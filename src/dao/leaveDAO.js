@@ -3,6 +3,7 @@ const chalk = require("chalk");
 const { ObjectID,ObjectId } = require("mongodb");
 const ObjectsToCsv = require("objects-to-csv");
 const LeaveTypeDAO = require("./leaveTypeDAO");
+const { query } = require("express");
 
 let leaves;
 let allowances;
@@ -150,7 +151,14 @@ class LeaveDAO {
    */
   static async addLeave(leaveInfo) {
     try {
-      console.log(leaveInfo);
+      const { employeeId } = leaveInfo;
+      console.log(employeeId);
+      const query = { employeeId: employeeId, status: "pending" };
+      const existLeave = await leaves.findOne(query);
+      if (existLeave) {
+        return false;
+      }
+      console.log(existLeave,query);
       // Compare requested duration & with remaining allowance
       return await leaves.insertOne({
         ...leaveInfo,
@@ -412,7 +420,7 @@ class LeaveAllowanceDAO {
         const sum = values.reduce((accumulator, value) => {
           return accumulator + value;
         }, 0);
-        const remaining = 79 - sum;
+        const remaining = (79 - sum) >0 ?(remaining -sum) :0;
         // console.log(remaining, values, sum,d);
         returnData.push({ ...d, remaining: remaining });
         return returnData;
