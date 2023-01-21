@@ -221,7 +221,7 @@ class PayrollDAO {
           const test = checkin <= "08:30:00" ? 8 :(8-((hour-8)%12))+changedMin;
           workedHours = Math.abs(test);
           overtimeHours = workedHours > 8 ? (workedHours-8).toFixed(2): 0
-          console.log(employeeId,workedHours,overtimeHours)
+          console.log(employeeId,checkin,workedHours,overtimeHours)
           const isHoliday = keys.filter((h) => h == date)
           // console.log(isHoliday)c
           if (isHoliday.length) {
@@ -415,7 +415,8 @@ class PayrollDAO {
              deductions.push({desc:"CostShare",rate: 0.01,amount:roundNumber(grossIncome*rate)}) 
           }
           // const costShare = {desc:"CostShare",rate:0.1,amount:roundNumber(grossIncome*rate)}
-          // console.log("Cost share --- ",deductions)
+          // console.log("Deduction --- ", deductions)
+          // console.log("Earning --- ",earnings)
           const deductionsTotal = roundNumber(
             deductions.reduce((prev, n) => prev + n.amount, 0)
           );
@@ -439,9 +440,10 @@ class PayrollDAO {
         }
       );
       const payTitle = new Date(payDate).toUTCString();
+      const payTitles = String(payTitle).slice(0,16)
       const payrollInfo = {
         org,
-        title:title?title:`${payType}-Payroll By ${payTitle}}`,
+        title:title?title:`${payType}-Payroll By ${payTitles}`,
         employeesCount: payrollHours.length,
         totalPayment,
         fromDate,
