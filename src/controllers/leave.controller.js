@@ -100,17 +100,17 @@ class LeaveController {
 
   static async apiAddLeave(req, res) {
     const result = await LeaveDAO.addLeave({ org: req.org, ...req.body });
-    // console.log(result)
+    console.log("0000 ")
+    console.log(result)
 
-    if (result.error) {
-      return res.status(result.server ? 500 : 400).json({
-        success: false,
-        error: result.server
-          ? "Internal error, try again later."
-          : result.error,
-      });
+    if (!result) {
+      return res
+        .status(500)
+        .json({
+          success: false,
+          error: "Already Created , Try to edit existing. ",
+        });
     }
-
     return res.status(201).json({
       success: true,
       message: "Leave request added",
