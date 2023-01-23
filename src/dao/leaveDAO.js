@@ -153,12 +153,17 @@ class LeaveDAO {
     try {
       const { employeeId } = leaveInfo;
       console.log(employeeId);
-      const query = { employeeId: employeeId, status: "pending" };
-      const existLeave = await leaves.findOne(query);
+      const today = new Date().toISOString().split("T")[0];
+      const query = { employeeId: employeeId, status: "pending" }
+      const query1 = {
+        employeeId: employeeId,startDate:{$lte:today}, endDate: { $gte: today }
+    };
+      const existLeave = await leaves.findOne(query1);
+      console.log(existLeave)
       if (existLeave) {
         return false;
       }
-      console.log(existLeave,query);
+      console.log(query,query1);
       // Compare requested duration & with remaining allowance
       return await leaves.insertOne({
         ...leaveInfo,
@@ -420,7 +425,7 @@ class LeaveAllowanceDAO {
         const sum = values.reduce((accumulator, value) => {
           return accumulator + value;
         }, 0);
-        const remaining = (79 - sum) >0 ?(remaining -sum) :0;
+        const remaining = (79 - sum) >0 ?(79-sum) :0;
         // console.log(remaining, values, sum,d);
         returnData.push({ ...d, remaining: remaining });
         return returnData;
