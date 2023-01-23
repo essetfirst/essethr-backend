@@ -156,11 +156,12 @@ class LeaveDAO {
       const today = new Date().toISOString().split("T")[0];
       const query = { employeeId: employeeId, status: "pending" }
       const query1 = {
-        employeeId: employeeId,startDate:{$lte:today}, endDate: { $gte: today }
+        employeeId: employeeId,status:"approved",startDate:{$lte:today}, endDate: { $gte: today }
     };
-      const existLeave = await leaves.findOne(query1);
-      console.log(existLeave)
-      if (existLeave) {
+      const existLeave = await leaves.findOne(query);
+      const existLeave1 = await leaves.findOne(query1);
+      console.log(existLeave, existLeave1);
+      if (existLeave || existLeave1) {
         return false;
       }
       console.log(query,query1);
