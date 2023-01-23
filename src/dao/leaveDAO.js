@@ -155,13 +155,13 @@ class LeaveDAO {
       console.log(employeeId);
       const today = new Date().toISOString().split("T")[0];
       const query = { employeeId: employeeId, status: "pending" }
-      const query1 = {
-        employeeId: employeeId,status:"approved",startDate:{$lte:today}, endDate: { $gte: today }
-    };
+    //   const query1 = {
+    //     employeeId: employeeId,status:"approved",startDate:{$lte:today}, endDate: { $gte: today }
+    // };
+    //   const existLeave = await leaves.findOne(query);
       const existLeave = await leaves.findOne(query);
-      const existLeave1 = await leaves.findOne(query1);
-      console.log(existLeave, existLeave1);
-      if (existLeave || existLeave1) {
+      // console.log(existLeave, existLeave1);
+      if (existLeave ) {
         return false;
       }
       console.log(query,query1);
@@ -181,7 +181,7 @@ class LeaveDAO {
   static async updateLeave(leaveInfo) {
     try {
       const { id, org, status = "pending", ...rest } = leaveInfo;
-      const query = { _id: ObjectId(id) };
+      const query = { _id: ObjectId(id),status:"pending" };
 
       const update = {
         $set: {
@@ -328,7 +328,7 @@ class LeaveDAO {
 
   static async deleteLeave(leaveId) {
     try {
-      const query = { _id: ObjectId(leaveId) };
+      const query = { _id: ObjectId(leaveId),status:"pending" };
       return await leaves.deleteOne(query);
     } catch (e) {
       console.error(chalk.redBright(`Unable to delete leave record, ${e}`));
@@ -420,18 +420,19 @@ class LeaveAllowanceDAO {
       var returnData = []
       const query = {};
       const data = await allowances.find(query).toArray();
-      const newData = data.map((d) => {
+
+      const newData = data.map(d => {
         const { used } = d;
         const values = Object.values(used);
         const sum = values.reduce((accumulator, value) => {
           return accumulator + value;
         }, 0);
-        const remaining = (79 - sum) >0 ?(79-sum) :0;
+        const remaining = (79 - sum) > 0 ? (79 - sum) : 0;
         // console.log(remaining, values, sum,d);
-        returnData.push({ ...d, remaining: remaining });
-        return returnData;
-      })
-      console.log(newData,returnData)
+        // returnData.push({ ...d, remaining: remaining });
+        return { ...d, remaining: remaining };
+      });
+      // console.log(newData,returnData)
       return newData ;
     } catch (e) {
       console.error(chalk.redBright(`Unable to fetch leave allowances, ${e}`));
