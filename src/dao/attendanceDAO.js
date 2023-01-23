@@ -6,6 +6,7 @@ const { readFile } = require("fs").promises;
 const fs = require("fs");
 const csv = require("csv-parser");
 const { ObjectID, ObjectId } = require("mongodb");
+const OrgDAO = require("./orgDAO");
 const path = require("path");
 const {
   DEFAULT_ATTENDANCE_POLICY,
@@ -14,7 +15,7 @@ const {
 } = require("../constants");
 const { computePayableHours } = require("../lib/computePayableHours");
 
-const OrgDAO = require("./orgDAO");
+// const OrgDAO = require("./orgDAO");
 const EmployeeDAO = require("./employeeDAO");
 const PayrollDateDAO = require("./payrollDateDAO");
 const { func, date, string } = require("joi");
@@ -32,38 +33,37 @@ let attendances;
  * @property {String} device
  */
 
-function getRemark(t) {
+function getRemark(t,policy) {
   const date = new Date(t).getDay();
-  // console.log(date);
-  // const a = t <= new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime();
-  // const b = t > new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime();
-  // const c = t <= new Date(`${new Date(t).toISOString().slice(0, 10)} 12:00 PM`).getTime();
-  // const d = t <= new Date(`${new Date(t).toISOString().slice(0, 10)} 05:00 PM`).getTime();
-  // console.log(a,b,c,d,date,date!=0,date>0 && date<=5,date==6);
   let remark;
+  console.log(t,date,policy)
+  const present = policy[date]
+  const { workStartTime } = present.workHours ;
+  const { workEndTime } = present.workHours;
+  const a =
+    new Date(
+    `${new Date(t).toISOString().slice(0, 10)} ${workStartTime}`
+  ).getTime();
 
-   if (
-     date != 0 &&
-     t <=
-       new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime()
+  const b = new Date(
+    `${new Date(t).toISOString().slice(0, 10)} ${workEndTime}`
+  ).getTime();
+
+  console.log(workStartTime, workEndTime)
+  console.log("-----")
+  console.log(t,a,b);
+
+   if ( t <=
+       new Date(`${new Date(t).toISOString().slice(0, 10)} ${workStartTime}`).getTime()
    ) {
      return "present";
    } else if (
      t >
        new Date(
-         `${new Date(t).toISOString().slice(0, 10)} 08:30 AM`
-       ).getTime() &&
-     ((t <=
+         `${new Date(t).toISOString().slice(0, 10)} ${workStartTime}`).getTime() &&
+     t <=
        new Date(
-         `${new Date(t).toISOString().slice(0, 10)} 05:00 PM`
-       ).getTime() &&
-       date > 0 &&
-       date <= 5) ||
-       (t <=
-         new Date(
-           `${new Date(t).toISOString().slice(0, 10)} 12:00 PM`
-         ).getTime() &&
-         date == 6))
+         `${new Date(t).toISOString().slice(0, 10)} ${workEndTime}`).getTime()
    ) {
      return "late";
    } else {
@@ -435,18 +435,21 @@ class AttendanceDAO {
       }
 
       const date = extractDateString(time);
+      /// Get Attendance Policy
+      const policy = await OrgDAO.getAttendancePolicy(orgId);
+      const attend = Object.values(policy);
       const isCheckin = await attendances.findOne({
         orgId,
         employeeId,
         date,
       });
-      // console.log(isCheckin,date)
+      console.log(attend)
 
       if (isCheckin) {
         return { error: "Employee already checked in!" };
       }
 
-      const remarks = getRemark(time);
+      const remarks = getRemark(time,attend);
       console.log(remarks);
 
       await attendances.insertOne({
@@ -454,7 +457,7 @@ class AttendanceDAO {
         employeeId,
         date,
         checkin: time,
-        remark: getRemark(time),
+        remark: remarks,
         device,
         status: "pending",
       });
