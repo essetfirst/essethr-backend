@@ -108,7 +108,7 @@ class LeaveController {
         .status(500)
         .json({
           success: false,
-          error: "Already Created Or You are On Leave. ",
+          error: "Already Created Try to edit Or You are On Leave. ",
         });
     }
     return res.status(201).json({
