@@ -19,6 +19,7 @@ const { computePayableHours } = require("../lib/computePayableHours");
 const EmployeeDAO = require("./employeeDAO");
 const PayrollDateDAO = require("./payrollDateDAO");
 const { func, date, string } = require("joi");
+const { min } = require("moment");
 
 let attendances;
 
@@ -49,8 +50,10 @@ function getRemark(policy) {
   const b = new Date(
     `${new Date(t).toISOString().slice(0, 10)} ${workEndTime}`
   ).getTime();
-  	var dates = new Date();
-    var checkinTime = dates.getHours() + ":" + dates.getMinutes() + ":" + dates.getSeconds();
+  var dates = new Date();
+  const minutes =
+    dates.getMinutes() <= 9 ? `0${dates.getMinutes()}` : dates.getMinutes();
+    var checkinTime = dates.getHours() + ":" + minutes + ":" + dates.getSeconds();
 
   const j =  new Date(`${new Date(t).toISOString().slice(0, 10)} ${checkinTime}`).getTime();
 
