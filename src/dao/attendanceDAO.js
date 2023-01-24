@@ -53,7 +53,7 @@ function getRemark(policy) {
   var dates = new Date();
   const minutes =
     dates.getMinutes() <= 9 ? `0${dates.getMinutes()}` : dates.getMinutes();
-    var checkinTime = dates.getHours() + ":" + minutes + ":" + dates.getSeconds();
+    var checkinTime = dates.getHours()+3 + ":" + minutes + ":" + dates.getSeconds();
 
   const j =  new Date(`${new Date(t).toISOString().slice(0, 10)} ${checkinTime}`).getTime();
 
