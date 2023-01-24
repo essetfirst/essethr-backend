@@ -36,8 +36,8 @@ let attendances;
 function getRemark(t,policy) {
   const date = new Date(t).getDay();
   let remark;
-  console.log(t,date,policy)
   const present = policy[date]
+  console.log(t,date,present)
   const { workStartTime } = present.workHours ;
   const { workEndTime } = present.workHours;
   const a =
@@ -58,12 +58,8 @@ function getRemark(t,policy) {
    ) {
      return "present";
    } else if (
-     t >
-       new Date(
-         `${new Date(t).toISOString().slice(0, 10)} ${workStartTime}`).getTime() &&
-     t <=
-       new Date(
-         `${new Date(t).toISOString().slice(0, 10)} ${workEndTime}`).getTime()
+     (t > new Date(`${new Date(t).toISOString().slice(0, 10)} ${workStartTime}`).getTime()) &&
+     (t <=new Date(`${new Date(t).toISOString().slice(0, 10)} ${workEndTime}`).getTime())
    ) {
      return "late";
    } else {
