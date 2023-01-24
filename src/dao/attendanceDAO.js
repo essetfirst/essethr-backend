@@ -64,13 +64,13 @@ function getRemark(policy) {
   console.log(t <= workStartTime , j<= workStartTime)
   console.log(t>workStartTime,t<=workEndTime,"----", j>workStartTime,j<=workEndTime)
 
-   if ( t <=
+   if ( j <=
        new Date(`${new Date(t).toISOString().slice(0, 10)} ${workStartTime}`).getTime()
    ) {
      return [t,"present"];
    } else if (
-     (t > new Date(`${new Date(t).toISOString().slice(0, 10)} ${workStartTime}`).getTime()) &&
-     (t <=new Date(`${new Date(t).toISOString().slice(0, 10)} ${workEndTime}`).getTime())
+     (j > new Date(`${new Date(t).toISOString().slice(0, 10)} ${workStartTime}`).getTime()) &&
+     (j <=new Date(`${new Date(t).toISOString().slice(0, 10)} ${workEndTime}`).getTime())
    ) {
      return [t,"late"];
    } else {
