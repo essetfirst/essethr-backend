@@ -1,5 +1,5 @@
 const chalk = require("chalk");
-const { ObjectID } = require("mongodb");
+const { ObjectID,ObjectId } = require("mongodb");
 
 let positions;
 
@@ -47,7 +47,7 @@ class PositionDAO {
 
   static async getPositionById(positionId) {
     try {
-      let query = { _id: ObjectID(positionId) };
+      let query = { _id: ObjectId(positionId) };
       return await positions.findOne(query);
     } catch (e) {
       console.error(chalk.redBright(`Error fetching position by id, ${e}`));
@@ -75,7 +75,7 @@ class PositionDAO {
   static async updatePosition(positionInfo = {}) {
     try {
       const { _id, ...rest } = positionInfo;
-      let query = { _id: ObjectID(_id) };
+      let query = { _id: ObjectId(_id) };
       let update = { $set: { ...rest } };
       return await positions.updateOne(query, update);
     } catch (e) {
@@ -86,7 +86,7 @@ class PositionDAO {
 
   static async deletePosition(positionId) {
     try {
-      let query = { _id: ObjectID(positionId) };
+      let query = { _id: ObjectId(positionId) };
       return await positions.deleteOne(query);
     } catch (e) {
       console.error(chalk.redBright(`Error deleting position by id, ${e}`));

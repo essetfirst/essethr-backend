@@ -1,4 +1,4 @@
-const { ObjectID } = require("mongodb");
+const { ObjectID,ObjectId } = require("mongodb");
 
 let departments;
 
@@ -69,7 +69,7 @@ class DepartmentDAO {
 
   static async getById(departmentId) {
     try {
-      let query = { _id: ObjectID(departmentId) };
+      let query = { _id: ObjectId(departmentId) };
       return await departments.findOne(query);
     } catch (e) {
       console.error(`Error fetching departments, ${e}`);
@@ -107,7 +107,7 @@ class DepartmentDAO {
 
   static async update({ _id, ...rest }) {
     try {
-      const query = { _id: ObjectID(_id) };
+      const query = { _id: ObjectId(_id) };
       const update = { $set: { ...rest } };
       return await departments.updateOne(query, update);
     } catch (e) {
@@ -118,7 +118,7 @@ class DepartmentDAO {
 
   static async delete({ _id, ...rest }) {
     try {
-      const query = { _id: ObjectID(_id), ...rest };
+      const query = { _id: ObjectId(_id), ...rest };
       return await departments.deleteOne(query);
     } catch (e) {
       console.error(`Error occurred while deleting department record, ${e}`);

@@ -1,20 +1,22 @@
 const Joi = require("joi");
-
+const {ObjectID,ObjectId} = require("mongodb")
 const EmployeeDAO = require("../dao/employeeDAO")
+const { parse, stringify, toJSON, fromJSON } = require("flatted");
+
 
 // const EmployeeValidation = require("../validation/employee");
 
 class EmployeeController {
   static async apiGetEmployees(req, res) {
     // console.log("Alol");
-    const { page = 1, limit = 10, ...rest } = req.query;
+    const { page = 1, limit = 20, ...rest } = req.query;
     const query = {
       page,
       limit,
       ...rest,
       org: req.query.org || req.query.orgId || req.org,
     };
-    console.log(query);
+    // console.log(query);
     const result = await EmployeeDAO.getEmployees(query);
     if (result.error) {
       return res
@@ -30,11 +32,11 @@ class EmployeeController {
   }
 
   static async apiGetEmployeeById(req, res) {
-    const result = await EmployeeDAO.getEmployeeById(req.params.id);
-    if (result.error) {
+    const result = await EmployeeDAO.getEmployeeById({ id: req.params.id });
+    if (!(result && result !== "null" && result !== "undefined")) {
       return res
-        .status(result.server ? 500 : 400)
-        .json({ success: false, error: result.server ? null : result.error });
+        .status(500)
+        .json({ success: false, error: "something went wrong" });
     }
     return res.json({
       success: true,
@@ -63,11 +65,20 @@ class EmployeeController {
     //   return res
     //     .status(400)
     //     .json({ success: false, error: Object.values(errors).join(", ") });
-    // }
-
+    // const [id, bachelor, masters, support] = req.files
+    // const paths = [id, bachelor, masters, support].map((d) => d ? d.path : '')
+    
+    // const allPaths = { IdCard: paths[0], degree: paths[1], masters: paths[2], support: paths[3] }
+    // const allData = { ...req.body, ...allPaths }
+    console.log({ org: String(req.org), ...req.body })
+    const { isAttendanceRequired, deductCostShare } = req.body;
+    
     const result = await EmployeeDAO.createEmployee({
-      org: req.org,
+      org: String(req.org),
       ...req.body,
+      isAttendanceRequired: req.body.isAttendanceRequired ? req.body.isAttendanceRequired : true,
+      deductCostShare:req.body.deductCostShare?req.body.deductCostShare:false
+
     });
 
     if (result.error) {
@@ -75,12 +86,12 @@ class EmployeeController {
         .status(result.server ? 500 : 400)
         .json({ success: false, error: result.server ? null : result.error });
     } else {
-      const employee = await EmployeeDAO.getEmployeeById(result.ops[0]);
+      const employee = await EmployeeDAO.getEmployeeById(result.insertedId);
 
       return res.status(201).json({
         success: true,
-        employee,
         message: "New employee profile created",
+        employee
       });
     }
   }
@@ -186,24 +197,28 @@ class EmployeeController {
     });
   }
   static async apiFilterEmployees(req, res) {
-    const data = req.body;
+    const data = req.query;
     let info = { org: String(req.org) };
     for (let i in data) {
       if (data[i]) {
         info[i] = data[i];
       }
     }
-    console.log(info)
+    // console.log(info)
     const result = await EmployeeDAO.filterEmployee(info);
     if (!result) {
       return res
         .status(404)
         .json({ success: false, message: "Employee Not Found" });
     }
+ 
+  console.log(Array.isArray(result))
+
     return res.json({
       success: true,
       employee: Array.isArray(result) ? result[0] : result,
     });
+    // // return result
   }
   static async apiImportEmployees(req, res) {}
   static async apiExportEmployees(req, res) {}

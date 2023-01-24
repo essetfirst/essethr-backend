@@ -7,10 +7,10 @@ class LeaveController {
       leaveAllowanceInfo
     );
     console.log(result);
-    if (result.error) {
+    if (!result) {
       return res
         .status(500)
-        .json({ success: false, error: "Internal error, try again later." });
+        .json({ success: false, error: "Already allocated , or Internal error. " });
     }
     return res.status(201).json({
       success: true,
@@ -37,7 +37,8 @@ class LeaveController {
   static async apiGetAllowances(req, res) {
     // console.log("Entering allowances handler...");
     const result = await LeaveAllowanceDAO.getAllowances();
-    // console.log("Entered allowances handler...");
+    console.log("Entered allowances handler...");
+    console.log(result);
     if (result.error) {
       return res
         .status(500)
@@ -79,14 +80,15 @@ class LeaveController {
     
   
   static async apiGetLeaveById(req, res) {
-    const result = await LeaveDAO.getLeaveById(req.params.id);
+    const result = await LeaveDAO.getLeaveById({ id: req.params.id });
+    // console.log(result)
 
-    if (result.error) {
-      return res.status(result.server ? 500 : 400).json({
+    if (!(result && result !== 'null' && result !== 'undefined')) {
+      return res.status(result ? 500 : 400).json({
         success: false,
-        error: result.server
+        error: false
           ? "Internal error, try again later."
-          : result.error,
+          : "something went wrong",
       });
     }
 
@@ -98,17 +100,17 @@ class LeaveController {
 
   static async apiAddLeave(req, res) {
     const result = await LeaveDAO.addLeave({ org: req.org, ...req.body });
-    // console.log(result)
+    console.log("0000 ")
+    console.log(result)
 
-    if (result.error) {
-      return res.status(result.server ? 500 : 400).json({
-        success: false,
-        error: result.server
-          ? "Internal error, try again later."
-          : result.error,
-      });
+    if (!result) {
+      return res
+        .status(500)
+        .json({
+          success: false,
+          error: "Already Created Try to edit Or You are On Leave. ",
+        });
     }
-
     return res.status(201).json({
       success: true,
       message: "Leave request added",
@@ -130,7 +132,7 @@ class LeaveController {
     }
 
     return res.status(200).json({
-      success: result.upsertedCount > 0,
+      success: result.modifiedCount > 0,
       message: `${
         result.modifiedCount === 0
           ? "Leave could not be approved"

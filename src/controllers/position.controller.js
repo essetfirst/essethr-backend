@@ -17,7 +17,7 @@ class PositionController {
     console.log("And there is no error!");
     return res.status(201).json({
       success: true,
-      position: result.ops[0],
+      position: result.ops?result.ops:result,
       message: "New position created",
     });
   }

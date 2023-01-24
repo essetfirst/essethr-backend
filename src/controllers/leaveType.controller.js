@@ -9,12 +9,12 @@ class LeaveTypeController {
 
     console.log(result, req.params.org)
 
-    if (result.error) {
-      return res.status(result.server ? 500 : 400).json({
-        success: false,
-        error: result.server ? "Something went wrong." : result.error,
-      });
-    }
+   if (!(result && result !== "null" && result !== "undefined")) {
+     return res.status(500).json({
+       success: false,
+       error: "Something went wrong.",
+     });
+   }
 
     return res.status(200).json({
       success: true,
@@ -26,10 +26,11 @@ class LeaveTypeController {
   static async apiGetLeaveTypeById(req, res) {
     const { id } = req.params;
     const result = await LeaveTypeDAO.getById(id);
-    if (result.error) {
-      return res.status(result.server ? 500 : 400).json({
+    console.log(result)
+    if (!(result && result !== "null" && result !== "undefined")) {
+      return res.status(500).json({
         success: false,
-        error: result.server ? "Something went wrong." : result.error,
+        error: "Something went wrong.",
       });
     }
 
@@ -45,16 +46,17 @@ class LeaveTypeController {
       org: req.params.org || req.body.org || req.org,
     });
 
-    if (result.error) {
-      return res.status(result.server ? 500 : 400).json({
+    if (!(result && result !== "null" && result !== "undefined")) {
+      return res.status(500).json({
         success: false,
-        error: result.server ? "Something went wrong." : result.error,
+        error: "Something went wrong.",
       });
     }
 
+
     return res.status(201).json({
       success: true,
-      leaveType: result.ops[0],
+      leaveType: result.ops ? result.ops : result,
       message: "New leave type added!",
     });
   }
@@ -65,10 +67,10 @@ class LeaveTypeController {
       ...req.body,
     });
 
-    if (result.error) {
-      return res.status(result.server ? 500 : 400).json({
+    if (!(result && result !== "null" && result !== "undefined")) {
+      return res.status(500).json({
         success: false,
-        error: result.server ? "Something went wrong." : result.error,
+        error: "Something went wrong.",
       });
     }
 

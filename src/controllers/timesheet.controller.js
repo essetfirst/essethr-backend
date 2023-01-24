@@ -76,15 +76,15 @@ class TimesheetService {
 
 class TimesheetController {
     
-    async static get(req, res) {
+    static async get(req, res) {
         
     }
 
-    async static clockin(req, res) {
+      static  async  clockin(req, res) {
 
     }
 
-    async static clockout(req, res) {
+      static  async  clockout(req, res) {
 
     } 
 }

@@ -48,10 +48,10 @@ class HolidayController {
         error: result.server ? "Something went wrong." : result.error,
       });
     }
-
+console.log(result)
     return res.status(201).json({
       success: true,
-      holiday: result.ops[0],
+      holiday: result.ops ? result.ops:result,
       message: "New holiday added!",
     });
   }
