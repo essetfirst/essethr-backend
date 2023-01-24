@@ -33,7 +33,8 @@ let attendances;
  * @property {String} device
  */
 
-function getRemark(t,policy) {
+function getRemark(policy) {
+  const t = Date.now();
   const date = new Date(t).getDay();
   let remark;
   const present = policy[date]
@@ -51,19 +52,22 @@ function getRemark(t,policy) {
 
   console.log(workStartTime, workEndTime)
   console.log("-----")
-  console.log(t,a,b);
+  console.log(t, a, b);
+  console.log("-----")
+  console.log(t <= workStartTime)
+  console.log(t>workStartTime,t<=workEndTime)
 
    if ( t <=
        new Date(`${new Date(t).toISOString().slice(0, 10)} ${workStartTime}`).getTime()
    ) {
-     return "present";
+     return [t,"present"];
    } else if (
      (t > new Date(`${new Date(t).toISOString().slice(0, 10)} ${workStartTime}`).getTime()) &&
      (t <=new Date(`${new Date(t).toISOString().slice(0, 10)} ${workEndTime}`).getTime())
    ) {
-     return "late";
+     return [t,"late"];
    } else {
-     return "absent";
+     return [t,"absent"];
    }
 }
 
@@ -445,14 +449,14 @@ class AttendanceDAO {
         return { error: "Employee already checked in!" };
       }
 
-      const remarks = getRemark(time,attend);
-      console.log(remarks);
+      const [times,remarks ]= getRemark(attend);
+      console.log([times,remarks]);
 
       await attendances.insertOne({
         orgId,
         employeeId,
         date,
-        checkin: time,
+        checkin: times,
         remark: remarks,
         device,
         status: "pending",
