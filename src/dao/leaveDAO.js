@@ -164,7 +164,7 @@ class LeaveDAO {
       if (existLeave ) {
         return false;
       }
-      console.log(query,query1);
+      console.log(query,existLeave);
       // Compare requested duration & with remaining allowance
       return await leaves.insertOne({
         ...leaveInfo,

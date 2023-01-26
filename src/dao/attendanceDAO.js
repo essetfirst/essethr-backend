@@ -57,12 +57,12 @@ function getRemark(policy) {
 
   const j =  new Date(`${new Date(t).toISOString().slice(0, 10)} ${checkinTime}`).getTime();
 
-  console.log(workStartTime, workEndTime,checkinTime)
-  console.log("-----")
-  console.log(t, a, b,j);
-  console.log("-----")
-  console.log(t <= workStartTime , j<= workStartTime)
-  console.log(t>workStartTime,t<=workEndTime,"----", j>workStartTime,j<=workEndTime)
+  // console.log(workStartTime, workEndTime,checkinTime)
+  // console.log("-----")
+  // console.log(t, a, b,j);
+  // console.log("-----")
+  // console.log(t <= workStartTime , j<= workStartTime)
+  // console.log(t>workStartTime,t<=workEndTime,"----", j>workStartTime,j<=workEndTime)
 
    if ( j <=
        new Date(`${new Date(t).toISOString().slice(0, 10)} ${workStartTime}`).getTime()
