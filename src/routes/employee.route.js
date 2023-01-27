@@ -15,11 +15,7 @@ router.route("/filter").get(EmployeeCtrl.apiFilterEmployees);
 router
   .route("/")
   .get(authenticate, EmployeeCtrl.apiGetEmployees)
-  .post(
-    authenticate,
-    fileUpload.addEmployeeCredentials,
-    EmployeeCtrl.apiCreateEmployee
-  );
+  .post(authenticate,fileUpload.addEmployeeMultiple,EmployeeCtrl.apiCreateEmployee);
       
 router
   .route("/:id")

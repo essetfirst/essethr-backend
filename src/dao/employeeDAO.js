@@ -146,7 +146,7 @@ class EmployeeDAO {
     try {
       // Save employee to database
       const employee = await employees.insertOne(employeeInfo);
-      console.log(employeeInfo);
+      // console.log(employeeInfo);
 
       // Allocate/Accrue leave entitlement/allowance to new employee
       await LeaveAllowanceDAO.allocateAllowance({
