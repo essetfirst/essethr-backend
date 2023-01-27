@@ -26,6 +26,6 @@ router
 router.route("/:id/details").get(EmployeeCtrl.apiGetEmployeeDetailsById);
 router
   .route("/:id/upload-image")
-  .put(upload.single("image"), EmployeeCtrl.apiUploadEmployeeImage);
+  .put(fileUpload.addEmployeeProfile, EmployeeCtrl.apiUploadEmployeeImage);
 
 module.exports = router;

@@ -97,9 +97,11 @@ class EmployeeController {
   }
 
   static async apiUploadEmployeeImage(req, res) {
+    console.log(req.file);
     const result = await EmployeeDAO.uploadEmployeeImage({
       _id: req.params.id,
       ...req.body,
+      image:req.file
     });
 
     console.log(result);
