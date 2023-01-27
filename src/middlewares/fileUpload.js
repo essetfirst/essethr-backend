@@ -21,12 +21,12 @@ const employeeStorage = multer.diskStorage({
   filename: (req, file, cb) => {
     console.log(file);
     const ext = file.mimetype.split("/")[1];
-    cb(null, `emp--${Date.now()}.${ext}`);
+    cb(null, file.originalname);
   },
 
   fileFilter(req, file, cb) {
-    if (!file.originalname.match(/\.(jpeg|JPEG|JPG|jpg|gif|GIF|png|PNG)$/)) {
-      return cb(new Error("Please upload a valid file"), false);
+    if (!file.originalname.match(/\.(pdf|PDF)$/)) {
+      return cb(new Error("Please upload a valid file, only pdf files allowed."), false);
     }
     cb(undefined, true);
   },
@@ -58,8 +58,8 @@ const employeeDegreeStorage = multer.diskStorage({
   },
 
   fileFilter(req, file, cb) {
-    if (!file.originalname.match(/\.(jpeg|JPEG|JPG|jpg|gif|GIF|png|PNG)$/)) {
-      return cb(new Error("Please upload a valid file"), false);
+    if (!file.originalname.match(/\.(pdf|PDF)$/)) {
+      return cb(new Error("Please upload a valid file, only pdf files allowed"), false);
     }
     cb(undefined, true);
   },
