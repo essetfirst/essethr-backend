@@ -70,12 +70,16 @@ class EmployeeController {
     
     // const allPaths = { IdCard: paths[0], degree: paths[1], masters: paths[2], support: paths[3] }
     // const allData = { ...req.body, ...allPaths }
-    console.log({ org: String(req.org), ...req.body })
+    // console.log({ org: String(req.org), ...req.body })
     const { isAttendanceRequired, deductCostShare } = req.body;
-    
+    const files = req.file;
+    // const paths = files.map((file) => file.path);
+    // const [a, b] = paths;
+    // console.log(paths)
     const result = await EmployeeDAO.createEmployee({
       org: String(req.org),
       ...req.body,
+      cv: files.path,
       isAttendanceRequired: req.body.isAttendanceRequired ? req.body.isAttendanceRequired : true,
       deductCostShare:req.body.deductCostShare?req.body.deductCostShare:false
 
@@ -97,11 +101,13 @@ class EmployeeController {
   }
 
   static async apiUploadEmployeeImage(req, res) {
-    console.log(req.file);
+    // console.log(req.file);
+    const vb = req.file
+    console.log(vb);
     const result = await EmployeeDAO.uploadEmployeeImage({
       _id: req.params.id,
       ...req.body,
-      image:req.file
+      image:vb.path
     });
 
     console.log(result);

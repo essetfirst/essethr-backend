@@ -20,7 +20,7 @@ const employeeStorage = multer.diskStorage({
   destination: "uploads/employees",
   filename: (req, file, cb) => {
     console.log(file);
-    const ext = file.mimetype.split("/")[1];
+    // const ext = file.mimetype.split("/")[1];
     cb(null, file.originalname);
   },
 
@@ -55,13 +55,14 @@ const employeeIdStorage = multer.diskStorage({
 const employeeProfileStorage = multer.diskStorage({
   destination: "uploads/employees",
   filename: (req, file, cb) => {
+    console.log("Destination");
     console.log(file);
-    const ext = file.mimetype.split("/")[1];
+    // cb(null, file);
     cb(null, file.originalname);
   },
 
   fileFilter(req, file, cb) {
-    if (!file.originalname.match(/\.(jpeg|JPEG|JPG|jpg|gif|GIF|png|PNG)$/)) {
+    if (!file.originalname.match(/\.(jpeg|JPEG|JPG|jpg|gif|png|GIF|PNG)$/)) {
       return cb(new Error("Please upload a valid file"), false);
     }
     cb(undefined, true);
@@ -123,5 +124,5 @@ exports.addEmployeeMasters = multer({ storage: employeeMasterStorage }).any("mas
 exports.addEmployeeSupport = multer({ storage: employeeSupportStorage }).any("support");
 exports.addEmployeeProfile = multer({ storage: employeeProfileStorage }).single("image");
 
-exports.addEmployeeCredentials = multer({ storage: employeeStorage }).array("images", 5);
+exports.addEmployeeCredentials = multer({ storage: employeeStorage }).single("file");
 exports.importAttendance = multer({ storage: attendanceStorage }).single("file");
