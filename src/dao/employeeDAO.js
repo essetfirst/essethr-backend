@@ -308,7 +308,8 @@ class EmployeeDAO {
   static async uploadEmployeeImage(employeeInfo = {}) {
     try {
       const { _id, image } = employeeInfo;
-      let query = { _id: ObjectID(_id) };
+      console.log(image);
+      let query = { _id: ObjectId(_id) };
       let update = { $set: { image } };
       return await employees.updateOne(query, update);
     } catch (e) {
