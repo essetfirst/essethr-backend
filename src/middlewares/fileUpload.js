@@ -19,20 +19,21 @@ const attendanceStorage = multer.diskStorage({
 const employeeStorage = multer.diskStorage({
   destination: "uploads/employees",
   filename: (req, file, cb) => {
-    console.log(file);
+    // console.log(file);
     // const ext = file.mimetype.split("/")[1];
     cb(null, file.originalname);
   },
 
   fileFilter(req, file, cb) {
     if (!file.originalname.match(/\.(pdf|PDF)$/)) {
-      return cb(new Error("Please upload a valid file, only pdf files allowed."), false);
+      return cb(
+        new Error("Please upload a valid file, only pdf files allowed."),
+        false
+      );
     }
     cb(undefined, true);
   },
 });
-
-
 
 const employeeIdStorage = multer.diskStorage({
   destination: "uploads/employees",
@@ -50,13 +51,11 @@ const employeeIdStorage = multer.diskStorage({
   },
 });
 
-
-
 const employeeProfileStorage = multer.diskStorage({
   destination: "uploads/employees",
   filename: (req, file, cb) => {
     console.log("Destination");
-    console.log(file);
+    // console.log(file);
     // cb(null, file);
     cb(null, file.originalname);
   },
@@ -69,18 +68,21 @@ const employeeProfileStorage = multer.diskStorage({
   },
 });
 
-
 const employeeDegreeStorage = multer.diskStorage({
   destination: "uploads/employees",
   filename: (req, file, cb) => {
+    // console.log(file);
+    // const ext = file.mimetype.split("/")[1];
     console.log(file);
-    const ext = file.mimetype.split("/")[1];
-    cb(null, `Bachelor--${Date.now()}.${ext}`);
+    cb(null,file.originalname);
   },
 
   fileFilter(req, file, cb) {
-    if (!file.originalname.match(/\.(pdf|PDF)$/)) {
-      return cb(new Error("Please upload a valid file, only pdf files allowed"), false);
+    if (!file.originalname.match(/\.(jpeg|JPEG|JPG|jpg|gif|GIF|png|PNG|pdf|PDF)$/)) {
+      return cb(
+        new Error("Please upload a valid file, only pdf files allowed"),
+        false
+      );
     }
     cb(undefined, true);
   },
@@ -105,9 +107,9 @@ const employeeMasterStorage = multer.diskStorage({
 const employeeSupportStorage = multer.diskStorage({
   destination: "uploads/employees",
   filename: (req, file, cb) => {
-    console.log(file);
+    // console.log(file);
     const ext = file.mimetype.split("/")[1];
-    cb(null, `Support--${Date.now()}.${ext}`);
+    cb(null, file.originalname);
   },
 
   fileFilter(req, file, cb) {
@@ -119,9 +121,9 @@ const employeeSupportStorage = multer.diskStorage({
 });
 
 exports.addEmployeeID = multer({ storage: employeeIdStorage }).any("card");
-exports.addEmployeeBachelor= multer({ storage: employeeDegreeStorage }).any("degree");
+exports.addEmployeeMultiple = multer({ storage: employeeDegreeStorage }).array("files",4);
 exports.addEmployeeMasters = multer({ storage: employeeMasterStorage }).any("masters");
-exports.addEmployeeSupport = multer({ storage: employeeSupportStorage }).any("support");
+exports.addEmployeeSupport = multer({ storage: employeeSupportStorage }).any("image");
 exports.addEmployeeProfile = multer({ storage: employeeProfileStorage }).single("image");
 
 exports.addEmployeeCredentials = multer({ storage: employeeStorage }).single("file");
