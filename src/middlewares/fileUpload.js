@@ -1,4 +1,5 @@
 const multer = require("multer");
+const path = require("path");
 
 const attendanceStorage = multer.diskStorage({
   destination: "uploads/attendance",
@@ -69,7 +70,7 @@ const employeeProfileStorage = multer.diskStorage({
 });
 
 const employeeDegreeStorage = multer.diskStorage({
-  destination: "uploads/employees",
+  destination: "src/public",
   filename: (req, file, cb) => {
     // console.log(file);
     // const ext = file.mimetype.split("/")[1];
