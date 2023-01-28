@@ -80,7 +80,7 @@ const employeeDegreeStorage = multer.diskStorage({
   fileFilter(req, file, cb) {
     if (!file.originalname.match(/\.(jpeg|JPEG|JPG|jpg|gif|GIF|png|PNG|pdf|PDF)$/)) {
       return cb(
-        new Error("Please upload a valid file, only pdf files allowed"),
+        new Error("Please upload a valid file, only pdf or image files allowed"),
         false
       );
     }
@@ -121,7 +121,15 @@ const employeeSupportStorage = multer.diskStorage({
 });
 
 exports.addEmployeeID = multer({ storage: employeeIdStorage }).any("card");
-exports.addEmployeeMultiple = multer({ storage: employeeDegreeStorage }).array("files",4);
+exports.addEmployeeMultiple = multer({ storage: employeeDegreeStorage }).fields([{
+                name:'cv',
+                maxCount:1
+            },
+            {
+              name: 'image',
+              maxCount: 1
+            }
+        ]);
 exports.addEmployeeMasters = multer({ storage: employeeMasterStorage }).any("masters");
 exports.addEmployeeSupport = multer({ storage: employeeSupportStorage }).any("image");
 exports.addEmployeeProfile = multer({ storage: employeeProfileStorage }).single("image");

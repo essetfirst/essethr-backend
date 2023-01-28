@@ -3,7 +3,7 @@ const { ObjectID, ObjectId } = require("mongodb");
 const EmployeeDAO = require("../dao/employeeDAO");
 const { parse, stringify, toJSON, fromJSON } = require("flatted");
 const { string } = require("joi");
-const { path } = require("../app");
+// const { path } = require("../app");
 
 // const EmployeeValidation = require("../validation/employee");
 
@@ -62,29 +62,34 @@ class EmployeeController {
    
     const { isAttendanceRequired, deductCostShare } = req.body;
     const files = req.files;
-    const paths = files.map((file) => file.path);
-    var importedata = paths.length > 1 ? {
-      cv: String(String(paths[0]).split(".")[1]).toUpperCase() == "PDF" ? paths[0] : paths[1],
-      image: String(String(paths[0]).split(".")[1]).toUpperCase() == "PDF" ? paths[1] : paths[0],
-    } : paths[0];
-
+    // const paths = files.map(file => file.path);
+    // var importedata = paths.length > 1 ? {
+    //   cv: String(String(paths[0]).split(".")[1]).toUpperCase() == "PDF" ? paths[0] : paths[1],
+    //   image: String(String(paths[0]).split(".")[1]).toUpperCase() == "PDF" ? paths[1] : paths[0],
+    // } : paths[0];
+    // console.log(files);
     // const importedata = 
-    console.log(importedata,)
-    if (paths.length < 2 && String(String(paths[0]).split(".")[1]).toUpperCase() != "PDF") {
-      return res.status(500).json({
+    // console.log(importedata)
+    // if (paths.length < 2 && String(String(paths[0]).split(".")[1]).toUpperCase() != "PDF") {
+    //   return res.status(500).json({
+    //     success: false,
+    //     message: "Employee Cv is mandatory!. add as pdf only."
+    //   });
+    const cv = req.files.cv ? req.files.cv[0].path:""
+    const image = req.files.image ? req.files.image[0].path : ""
+    
+    if (!cv) {
+    return res.status(500).json({
         success: false,
         message: "Employee Cv is mandatory!. add as pdf only."
       });
     }
-    // var importedata2 = paths.length < 2 ? { "cv": paths[0] }: importedata;
-    // console.log("----")
-    // console.log(Object.keys(importedata).length);
-    const finals = Object.keys(importedata).length == 2 ? importedata : { "cv": paths[0] }
-    // console.log(finals);
+
     const result = await EmployeeDAO.createEmployee({
       org: String(req.org),
       ...req.body,
-      ...finals,
+      cv,
+      image,
       isAttendanceRequired: req.body.isAttendanceRequired
         ? req.body.isAttendanceRequired
         : true,
