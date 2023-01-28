@@ -3,6 +3,8 @@ const { ObjectID, ObjectId } = require("mongodb");
 const EmployeeDAO = require("../dao/employeeDAO");
 const { parse, stringify, toJSON, fromJSON } = require("flatted");
 const { string } = require("joi");
+const cors = require("cors")
+const fs = require("fs");
 // const { path } = require("../app");
 
 // const EmployeeValidation = require("../validation/employee");
@@ -59,7 +61,6 @@ class EmployeeController {
   }
 
   static async apiCreateEmployee(req, res) {
-   
     const { isAttendanceRequired, deductCostShare } = req.body;
     const files = req.files;
     // const paths = files.map(file => file.path);
@@ -67,38 +68,38 @@ class EmployeeController {
     //   cv: String(String(paths[0]).split(".")[1]).toUpperCase() == "PDF" ? paths[0] : paths[1],
     //   image: String(String(paths[0]).split(".")[1]).toUpperCase() == "PDF" ? paths[1] : paths[0],
     // } : paths[0];
-    // console.log(files);
-    // const importedata = 
+    console.log(files);
+    // const importedata =
     // console.log(importedata)
     // if (paths.length < 2 && String(String(paths[0]).split(".")[1]).toUpperCase() != "PDF") {
     //   return res.status(500).json({
     //     success: false,
     //     message: "Employee Cv is mandatory!. add as pdf only."
     //   });
-    const cv = req.files.cv ? req.files.cv[0].path:""
-    const image = req.files.image ? req.files.image[0].path : ""
-    
+    const cv = req.files.cv ? req.files.cv[0].path : "";
+    const image = req.files.image ? req.files.image[0].path : "";
+
     if (!cv) {
-    return res.status(500).json({
+      return res.status(500).json({
         success: false,
-        message: "Employee Cv is mandatory!."
-    });
+        message: "Employee Cv is mandatory!.",
+      });
     }
     const isPDF = cv ? cv.split(".")[1].toUpperCase() : false;
     const isImage = image ? image.split(".")[1].toUpperCase() : false;
-    if (isPDF != "PDF") { 
-       return res.status(500).json({
-         success: false,
-         message: "Employee Cv is pdf only!",
-       });
+    if (isPDF != "PDF") {
+      return res.status(500).json({
+        success: false,
+        message: "Employee Cv is pdf only!",
+      });
     }
-    const imageTypes = ["PNG", "JPEG", "GIF","JPG"];
+    const imageTypes = ["PNG", "JPEG", "GIF", "JPG"];
     if (isImage && !imageTypes.includes(isImage)) {
-       return res.status(500).json({
-       success: false,
-       message: "Employee profile is valid image files only!",
-     });
- }
+      return res.status(500).json({
+        success: false,
+        message: "Employee profile is valid image files only!",
+      });
+    }
 
     const result = await EmployeeDAO.createEmployee({
       org: String(req.org),
@@ -123,7 +124,7 @@ class EmployeeController {
       return res.status(201).json({
         success: true,
         message: "New employee profile created",
-        employee
+        employee,
       });
     }
   }
@@ -255,6 +256,31 @@ class EmployeeController {
       employee: Array.isArray(result) ? result[0] : result,
     });
     // // return result
+  }
+
+  static async downloadFile(req, res) {
+    // const data = req.query;
+    // 
+    try {
+      const filename = 'Resume.pdf';
+      const filepath = 'public/employees/Resume.pdf';
+      console.log(filename, filepath);
+      const stream = fs.createReadStream(filepath);
+      console.log(stream)
+      const headerST = {
+        "Content-Disposition": "attachment; filename=Resume.pdf",
+        "Content/type": "application/json"
+      };
+      console.log(headerST);
+      res.set(headerST);
+      
+      console.log('--')
+      console.log(res);
+      stream.pipe(res);
+      console.log("Done")
+    } catch (err) {
+      console.log("WEF",err); // // // return result
+    }
   }
   static async apiImportEmployees(req, res) {}
   static async apiExportEmployees(req, res) {}
