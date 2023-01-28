@@ -76,9 +76,9 @@ class EmployeeController {
     //     success: false,
     //     message: "Employee Cv is mandatory!. add as pdf only."
     //   });
-    const cv = req.files.cv ? req.files.cv[0].path : "";
-    const image = req.files.image ? req.files.image[0].path : "";
-    console.log(cv, image);
+    const cv = req.files.cv ? req.files.cv[0].filename : "";
+    const image = req.files.image ? req.files.image[0].filename : "";
+    // console.log(req.files.cv[0]);
     if (!cv) {
       return res.status(500).json({
         success: false,
