@@ -78,7 +78,7 @@ class EmployeeController {
     //   });
     const cv = req.files.cv ? req.files.cv[0].path : "";
     const image = req.files.image ? req.files.image[0].path : "";
-
+    console.log(cv, image);
     if (!cv) {
       return res.status(500).json({
         success: false,
