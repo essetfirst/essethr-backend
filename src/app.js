@@ -14,7 +14,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 if (process.env.NODE_ENV !== "production") app.use(morgan("dev"));
-app.use(express.static(path.resolve("../public")));
+app.use(express.static(path.resolve("../uploads")));
 
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");

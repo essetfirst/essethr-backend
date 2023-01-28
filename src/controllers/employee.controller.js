@@ -120,7 +120,6 @@ class EmployeeController {
         .json({ success: false, error: result.server ? null : result.error });
     } else {
       const employee = await EmployeeDAO.getEmployeeById(result.insertedId);
-
       return res.status(201).json({
         success: true,
         message: "New employee profile created",
