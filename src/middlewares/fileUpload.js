@@ -69,7 +69,7 @@ const employeeProfileStorage = multer.diskStorage({
 });
 
 const employeeDegreeStorage = multer.diskStorage({
-  destination: "uploads/employees",
+  destination: "public/employees",
   filename: (req, file, cb) => {
     // console.log(file);
     // const ext = file.mimetype.split("/")[1];
