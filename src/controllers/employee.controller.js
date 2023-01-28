@@ -81,9 +81,24 @@ class EmployeeController {
     if (!cv) {
     return res.status(500).json({
         success: false,
-        message: "Employee Cv is mandatory!. add as pdf only."
-      });
+        message: "Employee Cv is mandatory!."
+    });
     }
+    const isPDF = cv ? cv.split(".")[1].toUpperCase() : false;
+    const isImage = image ? image.split(".")[1].toUpperCase() : false;
+    if (isPDF != "PDF") { 
+       return res.status(500).json({
+         success: false,
+         message: "Employee Cv is pdf only!",
+       });
+    }
+    const imageTypes = ["PNG", "JPEG", "GIF","JPG"];
+    if (isImage && !imageTypes.includes(isImage)) {
+       return res.status(500).json({
+       success: false,
+       message: "Employee profile is valid image files only!",
+     });
+ }
 
     const result = await EmployeeDAO.createEmployee({
       org: String(req.org),
