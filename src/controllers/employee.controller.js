@@ -155,6 +155,34 @@ class EmployeeController {
   }
 
   static async apiUpdateEmployee(req, res) {
+  
+     const cv = req.files.cv ? req.files.cv[0].filename : "";
+     const image = req.files.image ? req.files.image[0].filename : "";
+     // console.log(req.files.cv[0]);
+     const isPDF = cv ? cv.split(".")[1].toUpperCase() : false;
+     const isImage = image ? image.split(".")[1].toUpperCase() : false;
+     if (isPDF && isPDF != "PDF") {
+       return res.status(500).json({
+         success: false,
+         message: "Employee Cv is pdf only!",
+       });
+     }
+     const imageTypes = ["PNG", "JPEG", "GIF", "JPG"];
+     if (isImage && !imageTypes.includes(isImage)) {
+       return res.status(500).json({
+         success: false,
+         message: "Employee profile is valid image files only!",
+       });
+     }
+    // const cvChange = { "cv": cv };
+    // const imageChange = { "image": image };
+    console.log(cv, image);
+    if (cv) {
+      req.body.cv = cv;
+    }
+    if (image) {
+      req.body.image = image;
+    }
     const result = await EmployeeDAO.updateEmployee({
       _id: req.params.id,
       ...req.body,

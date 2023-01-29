@@ -25,7 +25,7 @@ router
 router
   .route("/:id")
   .get(EmployeeCtrl.apiGetEmployeeById)
-  .put(upload.single("image"), EmployeeCtrl.apiUpdateEmployee)
+  .put(fileUpload.addEmployeeMultiple, EmployeeCtrl.apiUpdateEmployee)
   .delete(EmployeeCtrl.apiDeleteEmployee);
 
 router.route("/:id/details").get(EmployeeCtrl.apiGetEmployeeDetailsById);

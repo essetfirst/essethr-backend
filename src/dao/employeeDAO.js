@@ -321,6 +321,7 @@ class EmployeeDAO {
   static async updateEmployee(employeeInfo = {}) {
     try {
       const { _id, ...rest } = employeeInfo;
+      console.log(employeeInfo);
       let query = { _id: ObjectId(_id) };
       let update = { $set: { ...rest } };
       return await employees.updateOne(query, update);
