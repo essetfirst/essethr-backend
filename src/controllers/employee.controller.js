@@ -5,6 +5,8 @@ const { parse, stringify, toJSON, fromJSON } = require("flatted");
 const { string } = require("joi");
 const cors = require("cors")
 const fs = require("fs");
+const uploadCloud = require("../config/cloudnary");
+
 // const { path } = require("../app");
 
 // const EmployeeValidation = require("../validation/employee");
@@ -68,7 +70,7 @@ class EmployeeController {
     //   cv: String(String(paths[0]).split(".")[1]).toUpperCase() == "PDF" ? paths[0] : paths[1],
     //   image: String(String(paths[0]).split(".")[1]).toUpperCase() == "PDF" ? paths[1] : paths[0],
     // } : paths[0];
-    console.log(files);
+    // console.log(files);
     // const importedata =
     // console.log(importedata)
     // if (paths.length < 2 && String(String(paths[0]).split(".")[1]).toUpperCase() != "PDF") {
@@ -76,6 +78,7 @@ class EmployeeController {
     //     success: false,
     //     message: "Employee Cv is mandatory!. add as pdf only."
     //   });
+    // ProductData.image = uploadCheck.url;
     const cv = req.files.cv ? req.files.cv[0].filename : "";
     const image = req.files.image ? req.files.image[0].filename : "";
     // console.log(req.files.cv[0]);
@@ -100,12 +103,16 @@ class EmployeeController {
         message: "Employee profile is valid image files only!",
       });
     }
+    
+    const uploadCV = await uploadCloud(cv);
+    const uploadImage = await uploadCloud(image);
+    console.log(uploadCV,cv,uploadImage,image)
 
     const result = await EmployeeDAO.createEmployee({
       org: String(req.org),
       ...req.body,
-      cv,
-      image,
+      cv:uploadCV.url? uploadCV.url :"",
+      image:uploadImage.url? uploadImage.url:"",
       isAttendanceRequired: req.body.isAttendanceRequired
         ? req.body.isAttendanceRequired
         : true,
@@ -178,10 +185,14 @@ class EmployeeController {
     // const imageChange = { "image": image };
     console.log(cv, image);
     if (cv) {
-      req.body.cv = cv;
+      const uploadCV = await uploadCloud(cv);
+      console.log(uploadCV)
+      req.body.cv = uploadCV.url?uploadCV.url:"";
     }
     if (image) {
-      req.body.image = image;
+      const uploadImage = await uploadCloud(image);
+      console.log(uploadImage);
+      req.body.image = uploadImage.url? uploadImage.url :"";
     }
     const result = await EmployeeDAO.updateEmployee({
       _id: req.params.id,

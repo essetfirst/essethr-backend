@@ -1,5 +1,16 @@
 const multer = require("multer");
 const path = require("path");
+const cloudnary = require("../config/cloudnary");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudnary,
+  params: {
+    folder: "DEV",
+  },
+  allowedFormats: ["jpg", "png", "jpeg", "JPG", "PNG", "JPEG"],
+}); 
 
 const attendanceStorage = multer.diskStorage({
   destination: "uploads/attendance",
@@ -70,7 +81,7 @@ const employeeProfileStorage = multer.diskStorage({
 });
 
 const employeeDegreeStorage = multer.diskStorage({
-  destination: "src/public",
+  destination: "public",
   filename: (req, file, cb) => {
     // console.log(file);
     // const ext = file.mimetype.split("/")[1];
@@ -122,15 +133,19 @@ const employeeSupportStorage = multer.diskStorage({
 });
 
 exports.addEmployeeID = multer({ storage: employeeIdStorage }).any("card");
-exports.addEmployeeMultiple = multer({ storage: employeeDegreeStorage }).fields([{
-                name:'cv',
-                maxCount:1
-            },
-            {
-              name: 'image',
-              maxCount: 1
-            }
-        ]);
+exports.addEmployeeMultiple = multer({
+  storage: employeeDegreeStorage,
+  limits: { fileSize: 1024 * 1024 * 5 },
+}).fields([
+  {
+    name: "cv",
+    maxCount: 1,
+  },
+  {
+    name: "image",
+    maxCount: 1,
+  },
+]);
 exports.addEmployeeMasters = multer({ storage: employeeMasterStorage }).any("masters");
 exports.addEmployeeSupport = multer({ storage: employeeSupportStorage }).any("image");
 exports.addEmployeeProfile = multer({ storage: employeeProfileStorage }).single("image");
