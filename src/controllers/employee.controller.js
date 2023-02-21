@@ -81,7 +81,7 @@ class EmployeeController {
     // ProductData.image = uploadCheck.url;
     const cv = req.files.cv ? req.files.cv[0].filename : "";
     const image = req.files.image ? req.files.image[0].filename : "";
-    // console.log(req.files.cv[0]);
+    console.log(cv,image);
     if (!cv) {
       return res.status(500).json({
         success: false,

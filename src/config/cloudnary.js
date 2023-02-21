@@ -1,10 +1,10 @@
+require("dotenv").config();
 const cloudinary = require("cloudinary").v2;
 const fs = require("fs");
-require("dotenv").config()
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_secret: process.env.API_SECRET,
-  api_key: process.env.API_KEY,
+  api_key: process.env.API_KEY ? process.env.API_KEY : "929313577245663",
 });
 
 const uploadToCloud = async function (locaFilePath) {
@@ -12,7 +12,7 @@ const uploadToCloud = async function (locaFilePath) {
   try {
     var mainFolderName = "public";
     var filePathOnCloudinary = mainFolderName + "/" + locaFilePath;
-    // console.log(locaFilePath.split(".")[0], filePathOnCloudinary);
+    console.log(locaFilePath.split(".")[0], filePathOnCloudinary);
 
     const result = await cloudinary.uploader.upload(filePathOnCloudinary, {
       public_id: locaFilePath.split(".")[0],
