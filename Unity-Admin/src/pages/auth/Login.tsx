@@ -119,23 +119,23 @@ const Login = () => {
                                         "Sign In"
                                     )}
                                 </Button>
-                                <Grid container>
-                                    <Grid item xs>
-                                        <Link to="#" >
-                                            Forgot password?
-                                        </Link>
-                                    </Grid>
-                                    <Grid item>
-                                        {/* <Link to="/auth/register" >
-                                            {"Don't have an account? Sign Up"}
-                                        </Link> */}
-                                    </Grid>
-                                </Grid>
+                                
                             </form>
                         )}
                     </Formik>
+
                 </Box>
-            </Container>
+                                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '20px' }}>
+                <Typography  sx={{ color: '' }} variant="body1">
+                    {` All Rights Reserved.    Copyright © ${new Date().getFullYear()} `}
+                </Typography>
+                
+            </div>
+            
+
+    
+                                           
+                                           </Container>
         </PageView>
     );
 };

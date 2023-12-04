@@ -92,6 +92,7 @@ function DashboardContent() {
     const [showMarketSubcategories, setShowMarketSubcategories] = React.useState(false);
     const [showUsersSubcategories, setShowUsersSubcategories] = React.useState(false);
     const [showReportsSubcategories, setShowReportsSubcategories] = React.useState(false);
+    const [showLabAssistants, setShowLabAssistants] = React.useState(false);
 
 
   return (
@@ -170,7 +171,6 @@ function DashboardContent() {
             />
           </IconButton>
         </Toolbar>
-        {/* <Divider /> */}
         <List>
           {mainListItems(
             showMarketSubcategories,
@@ -178,7 +178,9 @@ function DashboardContent() {
             showUsersSubcategories,
             setShowUsersSubcategories,
             showReportsSubcategories,
-            setShowReportsSubcategories
+            setShowReportsSubcategories,            
+            showLabAssistants,
+            setShowLabAssistants
           )}
         </List>
         <Divider sx={{ mt: 2 }} />
