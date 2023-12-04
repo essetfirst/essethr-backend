@@ -4,7 +4,7 @@ const url = import.meta.env.VITE_API_URL;
 const api = `${url}user/`;
 
 
-const token = localStorage.getItem("token") || "";
+const token = localStorage.getItem("token") ;
 
 //get all categories
 export const getCustomers = async () => {
@@ -12,7 +12,7 @@ export const getCustomers = async () => {
     const response = await axios.get(`${api}all`, {
         headers: {
             "Content-Type": "application/json",
-            authtoken: `${token}`,
+            "authtoken": `${token}`,
         },
     });
     return response.data;
@@ -25,7 +25,7 @@ export const createCustomer = async (data: any) => {
     const response = await axios.post(`${api}signup`, data, {
         headers: {
             "Content-Type": "application/json",
-            authtoken: `${token}`,
+        "authtoken": `${token}`,
         },
     });
     console.log(" Response ",response);
@@ -38,7 +38,7 @@ export const getCustomerById = async (id: any) => {
     const response = await axios.get(`${api}get/${id}`, {
         headers: {
             "Content-Type": "application/json",
-            authtoken: `${token}`,
+                "authtoken": `${token}`,
         },
     });
 
@@ -48,14 +48,14 @@ export const getCustomerById = async (id: any) => {
 //update category
 export const updateCustomer = async (id: any) => {
     console.log(" Approve User ",id)
-    const response = await axios.put(`${api}approve/${id}`, {
+    const response = await axios.put(`${api}approve/${id}`,{}, {
         headers: {
             "Content-Type": "application/json",
-            authtoken: `${token}`,
+                "authtoken": `${token}`,
         },
     });
     console.log(" Approve Respone ",response)
-    return response.data;
+    return response?.data;
 }
 
 
@@ -64,7 +64,7 @@ export const deleteCustomer = async (id: any) => {
     const response = await axios.delete(`${api}delete/${id}`, {
         headers: {
             "Content-Type": "application/json",
-            authtoken: `${token}`,
+                "authtoken": `${token}`,
         },
     });
     console.log(" Response Delete  ",response);

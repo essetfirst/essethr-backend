@@ -8,13 +8,14 @@ const token = localStorage.getItem("token") || "";
 //get all categories
 export const getCustomers = async () => {
   try{
+    console.log(" get all farmer");
 
     const response = await axios.get(`${api}`, {
       headers: {
         "Content-Type": "application/json",
-        authtoken: `${token}`,
       },
     });
+    console.log(" Farmers ",response);
     return response.data;
   }catch(err){
     throw err;
@@ -77,6 +78,17 @@ export const updateCustomer = async (id: any) => {
   return response.data;
 };
 
+export const updateAssistant = async (body:any) => {
+  const {id,status} = body
+  const response = await axios.put(`${url}lab/${id}`,{status},{
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  console.log(" Update Assistant Respone ",response);
+  return response.data;
+};
+
 export const deleteCustomer = async (id: any) => {
   console.log(" Delete Customer ", id);
   const response = await axios.delete(`${api}delete/${id}`, {
@@ -94,6 +106,17 @@ export const deleteTank = async (id: any) => {
     headers: {
       "Content-Type": "application/json",
       authtoken: `${token}`,
+    },
+  });
+  console.log(" Response Delete  ", response);
+  return response.data;
+};
+
+export const deleteLab = async (id: any) => {
+  console.log(" Delete Lab Assistant ", id);
+  const response = await axios.delete(`${url}lab/${id}`, {
+    headers: {
+      "Content-Type": "application/json",
     },
   });
   console.log(" Response Delete  ", response);
