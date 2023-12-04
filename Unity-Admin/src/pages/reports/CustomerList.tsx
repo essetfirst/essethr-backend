@@ -130,8 +130,9 @@ const CustomersView = ({
   useEffect(() => {
       async function fetchTopic() {
          const others =  window.location.href.split("/")[5] === "complex" ? "/complex/" : "/";
+         console.log(" Get ", `${api}${selectedType}${selectedRoute}`)
          const response = await axios.get(
-           `${api}${selectedType}${selectedType}`,
+           `${api}${selectedType}${selectedRoute}`,
            {
              headers: {
                "Content-Type": "application/json",
@@ -156,6 +157,8 @@ const CustomersView = ({
    async function fetchTopic() {
      const others =
      window.location.href.split("/")[5] === "complex" ? "complex" : "";
+      console.log(" Without Slash ", `${api}${selectedType}${selectedRoute}`)
+
      const response = await axios.get(
        `${api}${selectedType}${selectedRoute}`,
        {

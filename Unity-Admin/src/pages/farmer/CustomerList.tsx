@@ -288,7 +288,7 @@ const CustomersView = ({
         const { row } = params;
         return (
           <>
-            <IconButton
+            {/* <IconButton
               onClick={() => {
                 setSelectedCustomer(row);
                 handleUpdate(row);
@@ -296,7 +296,7 @@ const CustomersView = ({
               }}
             >
               <CheckCircleOutlineIcon />
-            </IconButton>
+            </IconButton> */}
             <IconButton
               onClick={() => {
                 setSelectedCustomer(row);
@@ -375,7 +375,7 @@ const CustomersView = ({
         const { row } = params;
         return (
           <>
-            <IconButton
+            {/* <IconButton
               onClick={() => {
                 setSelectedCustomer(row);
                 handleUpdate(row);
@@ -383,7 +383,7 @@ const CustomersView = ({
               }}
             >
               <CheckCircleOutlineIcon />
-            </IconButton>
+            </IconButton> */}
             <IconButton
               onClick={() => {
                 setSelectedCustomer(row);
