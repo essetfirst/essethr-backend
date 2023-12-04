@@ -74,9 +74,6 @@ export default function AccountMenu() {
                 transformOrigin={{ horizontal: "right", vertical: "top" }}
                 anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
             >
-                <MenuItem component={Link} to="profile">
-                    <Avatar /> Profile
-                </MenuItem>
                 <Divider />
                 {/* <MenuItem component={Link} to="settings">
                     <ListItemIcon>

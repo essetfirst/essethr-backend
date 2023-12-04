@@ -33,7 +33,7 @@ import  {useState } from 'react';
 import PendingIcon from "@mui/icons-material/Pending";
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 // import AssessmentIcon from "@mui/icons-material/Assessment";
-
+import BiotechIcon from '@mui/icons-material/Biotech';
 const listAdminItems = [
   {
     name: "Dashboard",
@@ -121,6 +121,23 @@ const listAdminItems = [
       },
     ],
   },
+  {
+    name: "Lab Assistants",
+    icon: <BiotechIcon />,
+    path: "/app/labs",
+    subcategories: [
+      {
+        name: "Pending",
+        icon: <PendingIcon />,
+        path: "/app/labs/pending",
+      },
+      {
+        name: "All",
+        icon: <CheckBoxIcon />,
+        path: "/app/labs/all",
+      },
+    ],
+  },
 ];
 
 type ShowMarketSubcategories = boolean;
@@ -129,6 +146,8 @@ type ShowUsersSubcategories = boolean;
 type SetShowUsersSubcategories = React.Dispatch<React.SetStateAction<boolean>>;
 type ShowReportsSubcategories = boolean;
 type SetShowReportsSubcategories = React.Dispatch<React.SetStateAction<boolean>>;
+type ShowLabAssistants = boolean;
+type SetShowLabAssistants = React.Dispatch<React.SetStateAction<boolean>>;
 
 export const mainListItems = (
   showMarketSubcategories: ShowMarketSubcategories,
@@ -137,6 +156,8 @@ export const mainListItems = (
   setShowUsersSubcategories: SetShowUsersSubcategories,
   showReportsSubcategories: ShowReportsSubcategories,
   setShowReportsSubcategories: SetShowReportsSubcategories,
+  showLabAssistants: ShowLabAssistants,
+  setShowLabAssistants: SetShowLabAssistants,
 ) => {
   return (
     <React.Fragment>
@@ -156,6 +177,7 @@ export const mainListItems = (
           <React.Fragment key={index}>
             {item.name === "Market" ||
             item.name === "Users" ||
+            item.name === "Lab Assistants" ||
             item.name === "Reports" ? (
               <ListItemButton
                 onClick={() => {
@@ -167,6 +189,9 @@ export const mainListItems = (
                   } else if (item.name === "Reports") {
                     console.log("Reports Clicked ", showReportsSubcategories);
                     setShowReportsSubcategories(!showReportsSubcategories);
+                  }else if (item.name === "Lab Assistants") {
+                    console.log("Lab Assistants Clicked ", !showLabAssistants);
+                    setShowLabAssistants(!showLabAssistants);
                   }
                 }}
               >
@@ -186,20 +211,23 @@ export const mainListItems = (
                     <ExpandMoreIcon />
                   )
                 ) : null}
-                {/* {item.name === "Users" ? (
-                  showUsersSubcategories ? (
-                    <ExpandLessIcon />
-                  ) : (
-                    <ExpandMoreIcon />
-                  )
-                ) : null} */}
+  
                 {item.name === "Reports" ? (
                   showReportsSubcategories ? (
                     <ExpandLessIcon />
                   ) : (
                     <ExpandMoreIcon />
                   )
-                ) : null}
+                ) : null
+                }
+                {item.name === "Lab Assistants" ? (
+                  showLabAssistants ? (
+                    <ExpandLessIcon />
+                  ) : (
+                    <ExpandMoreIcon />
+                  )
+                ) : null
+                }
               </ListItemButton>
             ) : (
               <ListItemButton component={NavLink} to={item.path}>
@@ -244,6 +272,23 @@ export const mainListItems = (
               )}
             {item?.name === "Users" &&
               showUsersSubcategories &&
+              item?.subcategories && (
+                <List>
+                  {item?.subcategories.map((subcategory, subIndex) => (
+                    <ListItemButton
+                      key={subIndex}
+                      component={NavLink}
+                      to={subcategory?.path}
+                      sx={{ paddingLeft: "30px" }} // Indent subcategories
+                    >
+                      <ListItemIcon>{subcategory?.icon}</ListItemIcon>
+                      <ListItemText primary={subcategory?.name} />
+                    </ListItemButton>
+                  ))}
+                </List>
+              )}
+              {item?.name === "Lab Assistants" &&
+              showLabAssistants &&
               item?.subcategories && (
                 <List>
                   {item?.subcategories.map((subcategory, subIndex) => (
