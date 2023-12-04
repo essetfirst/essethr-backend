@@ -49,6 +49,8 @@ import Profile from '../pages/profile';
 import ReportsList from "../pages/reports";
 import ReportsDetail from "../pages/reports/CategoryDetail";
 
+import LabsList from "../pages/labs";
+
 
 const RoutesComponent = () => {
     return (
@@ -102,6 +104,11 @@ const RoutesComponent = () => {
               <Route path="complex/:selectType/:id"   element={<ReportsDetail />} />
               <Route path="all/:selectType/:id"  element={<ReportsDetail />} />
             </Route>
+            <Route path="labs" element={<Outlet />}>
+              <Route path="pending"  element={<LabsList />} />
+              <Route path="all"  element={<LabsList />} />
+            </Route>
+
             <Route path="settings" element={<Settings />} />
             <Route path="profile" element={<Profile />} />
           </Route>
