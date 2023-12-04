@@ -6,7 +6,9 @@ import {
   getCustomerById,
   getTankById,
   updateCustomer,
+  // updateAssistant,
   deleteCustomer,
+  // deleteLab,
 } from "../../api/farmerApi";
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useNotification } from '../useNotification';
@@ -43,6 +45,17 @@ export const FarmerProvider = ({ children }: any) => {
         }
     });
 
+    // const { mutate: updateLabAssistantMutation } = useMutation((data: any) => updateAssistant(data), {
+    //     onSuccess: () => {
+    //         showNotification(`Lab Assistant status changed  successfully`, 'success');
+    //         queryClient.invalidateQueries('customers');
+    //     },
+
+    //     onError: (error: any) => {
+    //         showNotification('Error updating assistant status', 'error');
+    //     }
+    // });
+
     const { mutate: deleteCustomerMutation, isLoading: deleteCustomerLoading } = useMutation(deleteCustomer, {
         onSuccess: () => {
             showNotification('Deleted Farmer successfully', 'success');
@@ -65,6 +78,18 @@ export const FarmerProvider = ({ children }: any) => {
         },
       });
 
+    // const { mutate: deleteLabAssistantMutation, isLoading: deleteLabLoading } =
+    //   useMutation(deleteLab, {
+    //     onSuccess: () => {
+    //       showNotification("Lab Assistant deleted successfully", "success");
+    //       queryClient.invalidateQueries("customers");
+    //     },
+
+    //     onError: (error: any) => {
+    //       showNotification('Error deleting lab assistant', "error");
+    //     },
+    //   });  
+
     return (
       <FarmerContext.Provider
         value={{
@@ -74,10 +99,13 @@ export const FarmerProvider = ({ children }: any) => {
           createCustomerMutation,
           createCustomerLoading,
           updateCustomerMutation,
+          // updateLabAssistantMutation,
           deleteCustomerMutation,
           deleteCustomerLoading,
           deleteTankMutation,
           deleteTankLoading,
+          // deleteLabLoading,
+          // deleteLabAssistantMutation
         }}
       >
         {children}

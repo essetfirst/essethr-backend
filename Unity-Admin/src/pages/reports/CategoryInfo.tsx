@@ -70,7 +70,9 @@ const ItemMedia = styled(CardMedia)(({ theme }) => ({
 }));
 
 
-
+type StyleItem = {
+  [key: string]: { fontStyle: string }; 
+};
 
 const CategoryInfo = ({ category,selectType }: any) => {
   const theme = useTheme();
@@ -173,7 +175,7 @@ const CategoryInfo = ({ category,selectType }: any) => {
       highlightedKeys
     ];
     const fileName = `${selectType}-Report-${moment().format('YYYY-MM-DD HH:mm:ss')}.pdf`
-  const matchingIndices = keysArray.reduce((indices:number, key, index) => {
+  const matchingIndices = keysArray.reduce((indices:number[], key:string, index:number) => {
      if (highlightedKeys.includes(key)) {
          indices.push(index);
      }
@@ -183,18 +185,17 @@ const styleArray = matchingIndices.map((currentIndex) => ({
   [currentIndex]: { fontStyle: 'bold' },
 }));
 
-const styleObject = styleArray.reduce((resul, item) => {
+const styleObject = styleArray.reduce((result:StyleItem, item:StyleItem) => {
   const currentIndex = Object.keys(item)[0];
   result[currentIndex] = item[currentIndex];
   return result;
-}, {});
+}, {} as StyleItem);
 
     const doc = new jsPDF();
     autoTable(doc,{
        head: [keysArray],
        body: [valuesArray],
-       columnStyles: styleObject, // Example: Make the first column bold
-      margin: { top: 20 }, // Example: Add top margin
+       margin: { top: 20 }, // Example: Add top margin
     })
    doc.save(fileName);
 }  
@@ -572,7 +573,7 @@ const styleObject = styleArray.reduce((resul, item) => {
               </CardContent>
             </Card>
           </Grid>
-           <Grid item xs={12}>
+           {/* <Grid item xs={12}>
             <Card sx={{ height: "100%" }} variant="outlined">
               <CardHeader
                 title="Export Options"
@@ -620,7 +621,7 @@ const styleObject = styleArray.reduce((resul, item) => {
                 </Grid>
               </CardContent>
             </Card>
-          </Grid>
+          </Grid> */}
           
         </Grid>
       </Container>
