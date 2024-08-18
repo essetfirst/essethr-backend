@@ -1,7 +1,9 @@
 const path = require("path");
 const chalk = require("chalk");
-const { ObjectID } = require("mongodb");
+const { ObjectID,ObjectId } = require("mongodb");
 const ObjectsToCsv = require("objects-to-csv");
+const LeaveTypeDAO = require("./leaveTypeDAO");
+const { query } = require("express");
 
 let leaves;
 let allowances;
@@ -47,7 +49,7 @@ class LeaveDAO {
       const end = to || toDate || endDate;
       // console.log(start, end);
       const query = {
-        org: String(org),
+        org: ObjectId(org),
         employeeId:
           employees.length > 0 ? { $in: employees } : { $exists: true },
         startDate: start
@@ -111,7 +113,8 @@ class LeaveDAO {
   }
   static async getLeaveById(leaveId) {
     try {
-      const query = { _id: ObjectID(leaveId) };
+      const query = { _id: ObjectId(leaveId.id) };
+      // console.log(query,leaveId,leaveId.id);
       return await leaves.findOne(query);
 
       // const pipeline = [
@@ -148,7 +151,20 @@ class LeaveDAO {
    */
   static async addLeave(leaveInfo) {
     try {
-      console.log(leaveInfo);
+      const { employeeId } = leaveInfo;
+      console.log(employeeId);
+      const today = new Date().toISOString().split("T")[0];
+      const query = { employeeId: employeeId, status: "pending" }
+    //   const query1 = {
+    //     employeeId: employeeId,status:"approved",startDate:{$lte:today}, endDate: { $gte: today }
+    // };
+    //   const existLeave = await leaves.findOne(query);
+      const existLeave = await leaves.findOne(query);
+      // console.log(existLeave, existLeave1);
+      if (existLeave ) {
+        return false;
+      }
+      console.log(query,existLeave);
       // Compare requested duration & with remaining allowance
       return await leaves.insertOne({
         ...leaveInfo,
@@ -165,7 +181,7 @@ class LeaveDAO {
   static async updateLeave(leaveInfo) {
     try {
       const { id, org, status = "pending", ...rest } = leaveInfo;
-      const query = { _id: ObjectID(id) };
+      const query = { _id: ObjectId(id),status:"pending" };
 
       const update = {
         $set: {
@@ -219,7 +235,7 @@ class LeaveDAO {
 
   static async approveLeaves(filterCriteria = {}) {
     try {
-      console.log("[leaveDAO]: Line 196 -> filterCriteria: ", filterCriteria);
+      // console.log("[leaveDAO]: Line 196 -> filterCriteria: ", filterCriteria);
 
       const { leaveIds = [] } = filterCriteria;
       // console.log(leaveIds.length)
@@ -227,14 +243,14 @@ class LeaveDAO {
         _id:
           leaveIds.length > 1
             ? { $in: leaveIds.map((id) => ObjectID(id)) }
-            : ObjectID(leaveIds[0]),
+            : ObjectId(leaveIds[0]),
         status: { $ne: "approved" },
       };
       console.log(query);
       const result = await leaves.updateMany(query, {
         $set: { status: "approved" },
       });
-      // console.log(result)
+      console.log(result)
 
       const updatedLeaves = await leaves
         .find({
@@ -242,7 +258,7 @@ class LeaveDAO {
         })
         .toArray();
 
-      // console.log("[leaveDAO]: Line 217 -> updateLeaves: ", updatedLeaves);
+      console.log("[leaveDAO]: Line 217 -> updateLeaves: ", updatedLeaves);
 
       await updatedLeaves.forEach(
         async ({ employeeId, leaveType, duration }) => {
@@ -252,7 +268,57 @@ class LeaveDAO {
           });
         }
       );
+      //Get Leave Id
+      const lId = result.upsertedIds || leaveIds[0];
+      console.log(lId)
+      const approveLeave = await leaves.findOne({ _id: ObjectId(lId) });
+      console.log(approveLeave)
+      // Get Leave Type,duration,employeeId
+       const {employeeId,leaveType,duration} = approveLeave
+      // Get Leave Name from leavetype
+      const leaveName = await LeaveTypeDAO.getById(leaveType);
+      console.log(leaveName);
+      const { name } = leaveName;
+      const leaveTypeName = (name) => {
+        if (name == "Compassionate Leave (Bereavement Leave)") {
+          return "special";
+        } else if (name == "Maternity Leave (Parental Leave)") {
+          return "maternal";
+        } else {
+          return "annual";
+        }
+      }
+      const names = leaveTypeName(name);
+      // call use allocated method
+      var useAllocated = { employees: [employeeId]}; 
+      useAllocated[names] = duration
+      console.log(useAllocated, name,duration,names)
+      const { employees = [], ...rest } = useAllocated;
+      const allowanceFields = Object.keys(rest)
+        .map((key) => ({
+          [`used.${key}`]: rest[key] ? rest[key] : 0,
+        }))
+        .reduce((obj, n) => {
+          obj = { ...obj, ...n };
+          return obj;
+        }, {});
+      console.log(allowanceFields);
+      const querys = {
+        employeeId:
+          employees.length > 1
+            ? { $in: [String(employees)] }
+            : String(employees[0]),
+      };
 
+      // console.log(query);
+      // const dt = await allowances.findOne(query);
+      // console.log(dt);
+      const update = {
+        $inc: allowanceFields,
+      };
+      console.log(update);
+      const res = await allowances.updateMany(querys, update);
+      console.log(res);
       return result;
     } catch (e) {
       console.error(chalk.redBright(`Unable to approve leave records, ${e}`));
@@ -262,7 +328,7 @@ class LeaveDAO {
 
   static async deleteLeave(leaveId) {
     try {
-      const query = { _id: ObjectID(leaveId) };
+      const query = { _id: ObjectId(leaveId),status:"pending" };
       return await leaves.deleteOne(query);
     } catch (e) {
       console.error(chalk.redBright(`Unable to delete leave record, ${e}`));
@@ -351,8 +417,23 @@ class LeaveAllowanceDAO {
 
   static async getAllowances(filterCriteria = {}) {
     try {
+      var returnData = []
       const query = {};
-      return await allowances.find(query).toArray();
+      const data = await allowances.find(query).toArray();
+
+      const newData = data.map(d => {
+        const { used } = d;
+        const values = Object.values(used);
+        const sum = values.reduce((accumulator, value) => {
+          return accumulator + value;
+        }, 0);
+        const remaining = (79 - sum) > 0 ? (79 - sum) : 0;
+        // console.log(remaining, values, sum,d);
+        // returnData.push({ ...d, remaining: remaining });
+        return { ...d, remaining: remaining };
+      });
+      // console.log(newData,returnData)
+      return newData ;
     } catch (e) {
       console.error(chalk.redBright(`Unable to fetch leave allowances, ${e}`));
       return { error: e };
@@ -389,13 +470,19 @@ class LeaveAllowanceDAO {
 
   static async allocateAllowance(allowanceInfo) {
     try {
-      // console.log(allowanceInfo)
+      console.log(allowanceInfo)
       // console.log("Hello")
-      return await allowances.insertOne({
+      const isAllocated = await allowances.findOne(allowanceInfo);
+      console.log(isAllocated);
+      if (isAllocated) {
+        return false;
+      }
+      const allocate = await allowances.insertOne({
         ...allowanceInfo,
         allocated: { ...ethiopianYearlyPaidLeaveAllowance },
         used: { ...ethiopianLeaveTypesDefault },
       });
+      return true;
     } catch (e) {
       console.error(
         chalk.redBright(`Unable to allocate leave allowance, ${e}`)

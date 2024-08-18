@@ -1,4 +1,6 @@
-const { ObjectID } = require("mongodb");
+const { min } = require("moment/moment");
+const { ObjectID, ObjectId } = require("mongodb");
+// const { all } = require("../routes/employee.route");
 const { LeaveAllowanceDAO } = require("./leaveDAO");
 
 let employees;
@@ -144,7 +146,7 @@ class EmployeeDAO {
     try {
       // Save employee to database
       const employee = await employees.insertOne(employeeInfo);
-      console.log(employee);
+      // console.log(employeeInfo);
 
       // Allocate/Accrue leave entitlement/allowance to new employee
       await LeaveAllowanceDAO.allocateAllowance({
@@ -169,7 +171,7 @@ class EmployeeDAO {
       let query = {};
       console.log(filterCriteria);
       if (org) {
-        query["org"] = ObjectID(org);
+        query["org"] = String(org);
       }
 
       const aEmployees = filterCriteria.employees;
@@ -180,7 +182,7 @@ class EmployeeDAO {
 
       console.log("\nQuery: \n", query);
       let findPipeline = employees.find(query);
-      console.log(findPipeline);
+      // console.log(findPipeline);
       if (limit) {
         findPipeline = findPipeline.limit(limit);
       }
@@ -204,9 +206,11 @@ class EmployeeDAO {
     }
   }
 
-  static async getEmployeeById(employeeId) {
+  static async getEmployeeById(employeeId ) {
     try {
-      const query = { _id: ObjectID(employeeId) };
+      const { id }= employeeId
+      const query = { _id: ObjectId(id) };
+      console.log(id,employeeId)
       return await employees.findOne(query);
     } catch (e) {
       console.error(`Unable to fetch employee by id, ${e}`);
@@ -216,7 +220,7 @@ class EmployeeDAO {
 
   static async getEmployeeDetailsById(employeeId) {
     try {
-      const query = { _id: ObjectID(employeeId) };
+      const query = { _id: ObjectId(employeeId) };
       const pipeline = [
         { $match: query },
         { $set: { _id: { $toString: "$_id" } } },
@@ -304,7 +308,8 @@ class EmployeeDAO {
   static async uploadEmployeeImage(employeeInfo = {}) {
     try {
       const { _id, image } = employeeInfo;
-      let query = { _id: ObjectID(_id) };
+      console.log(image);
+      let query = { _id: ObjectId(_id) };
       let update = { $set: { image } };
       return await employees.updateOne(query, update);
     } catch (e) {
@@ -316,7 +321,8 @@ class EmployeeDAO {
   static async updateEmployee(employeeInfo = {}) {
     try {
       const { _id, ...rest } = employeeInfo;
-      let query = { _id: ObjectID(_id) };
+      console.log(employeeInfo);
+      let query = { _id: ObjectId(_id) };
       let update = { $set: { ...rest } };
       return await employees.updateOne(query, update);
     } catch (e) {
@@ -327,7 +333,7 @@ class EmployeeDAO {
 
   static async deleteEmployee(employeeId) {
     try {
-      return await employees.deleteOne({ _id: ObjectID(employeeId) });
+      return await employees.deleteOne({ _id: ObjectId(employeeId) });
     } catch (e) {
       console.error(`Unable to delete single employee record, ${e}`);
       return { error: e };
@@ -470,9 +476,22 @@ class EmployeeDAO {
 
   static async filterEmployee(employeeInfo) {
     try {
-      let { department, gender, position, minSalary, maxSalary, org } =
-        employeeInfo;
-      console.log(employeeInfo);
+      let {
+        department,
+        gender,
+        position,
+        minSalary,
+        maxSalary,
+        minAge,
+        maxAge,
+        org,
+      } = employeeInfo;
+      console.log(minAge, maxAge);
+      const today = new Date().toJSON().slice(0, 10);
+      const minus = +today.split("-")[0] - minAge;
+      const plus = +today.split("-")[0] - maxAge;
+      // console.log(today.split("-"),today,minus,plus)
+      var birthDate;
       var salary;
       if (minSalary) {
         salary = { $gte: minSalary };
@@ -483,16 +502,42 @@ class EmployeeDAO {
       if (minSalary && maxSalary) {
         salary = { $gte: minSalary, $lte: maxSalary };
       }
+      if (minAge) {
+        birthDate = {
+          $lte: new Date(`${minus}-01-01`).toISOString().split("T")[0],
+        };
+      }
+      if (maxAge) {
+        birthDate = {
+          $gte: new Date(`${plus}-01-01`).toISOString().split("T")[0],
+        };
+      }
+      if (maxAge && minAge) {
+        birthDate = {
+          $lte: new Date(`${minus}-12-30`).toISOString().split("T")[0],
+          $gte: new Date(`${plus}-01-01`).toISOString().split("T")[0],
+        };
+      }
 
       const query = {
-        org: ObjectID(org),
-        gender: gender ? gender : { $ne: null },
-        department: department ? department : { $ne: null },
-        position: position ? position : { $ne: null },
-        salary,
+        org: String(org),
+        gender:
+          (gender && gender == "all") || gender == undefined
+            ? { $exists: true }
+            : gender,
+        department:
+          (department && department == "all") || department == undefined
+            ? { $exists: true }
+            : department,
+        position:
+          (position && position == "all") || position == undefined
+            ? { $exists: true }
+            : position,
+        birthDay: birthDate,
+        // salary,
       };
       console.log(query);
-      return await employees.find(query);
+      return await employees.find(query).toArray();
     } catch (e) {
       console.error(`Unable to fetch employee by id, ${e}`);
       return { error: e };

@@ -77,13 +77,13 @@ class PayrollController {
     const payrollProcessor = req.body.commissionEnabled
       ? "processPayroll"
       : "generatePayroll";
-    console.log(payrollProcessor)
+    // console.log(payrollProcessor,req.body)
     const result = await PayrollDAO[payrollProcessor]({
-      org: req.org,
+      org:String(req.org),
       ...req.body,
       ...req.query,
     });
-    console.log(result)
+    // console.log(result)
     if (!result || result.error) {
       return res.status(result.server ? 500 : 400).json({
         success: false,

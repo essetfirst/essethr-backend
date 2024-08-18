@@ -1,5 +1,5 @@
 const chalk = require("chalk");
-const { ObjectID } = require("mongodb");
+const { ObjectID,ObjectId } = require("mongodb");
 // const EmployeeDAO = require("./employeeDAO");
 let users;
 
@@ -70,8 +70,9 @@ class UserDAO {
     try {
       return await users.insertOne({
         ...userInfo,
-        name: userInfo.name || `${userInfo.firstName} ${userInfo.lastName}`,
+        name: `${userInfo.firstName} ${userInfo.lastName}`,
         createdOn: new Date().toISOString(),
+        updatedOn: new Date().toISOString(),
       });
     } catch (e) {
       console.error(chalk.redBright(`Error creating user, ${e.stack}`));
@@ -131,7 +132,7 @@ class UserDAO {
 
   static async getUserById(userId) {
     try {
-      return await users.findOne({ _id: ObjectID(userId) });
+      return await users.findOne({ _id: ObjectId(userId) });
     } catch (e) {
       console.error(chalk.redBright(`Error fetching user by id, ${e.stack}`));
       return { error: e, server: true };
@@ -140,9 +141,9 @@ class UserDAO {
 
   static async updateUser(userInfo) {
     try {
-      const { id, accessToken, token, tokens, tokenAction, ...rest } = userInfo;
+      const { _id, accessToken, token, tokens, tokenAction, ...rest } = userInfo;
 
-      const query = { _id: ObjectID(id) };
+      const query = { _id: ObjectId(_id) };
       let update = {
         $set: { ...rest, updatedOn: new Date().toISOString() },
       };
@@ -154,13 +155,14 @@ class UserDAO {
         };
       }
 
-      console.log("Query: ", query);
+      console.log("Query: ", query," Rest ",rest);
       console.log("Update: ", update);
 
+
       const result = await users.updateOne(query, update);
-      // console.log(result.modified.Count)
+      console.log(result)
       if (!result.modifiedCount) {
-        return { success: false, error: "Unable to activate" };
+        return { success: false, error: "Unable to update" };
       }
       var updatedUser = await users.findOne(query);
       return updatedUser;
@@ -172,7 +174,7 @@ class UserDAO {
 
   static async deleteUser(userId) {
     try {
-      const query = { _id: ObjectID(userId) };
+      const query = { _id: ObjectId(userId) };
       return await users.deleteOne(query);
     } catch (e) {
       console.error(chalk.redBright(`Error deleting user, ${e.stack}`));

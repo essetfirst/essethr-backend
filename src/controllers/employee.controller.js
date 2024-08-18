@@ -1,20 +1,27 @@
 const Joi = require("joi");
+const { ObjectID, ObjectId } = require("mongodb");
+const EmployeeDAO = require("../dao/employeeDAO");
+const { parse, stringify, toJSON, fromJSON } = require("flatted");
+const { string } = require("joi");
+const cors = require("cors")
+const fs = require("fs");
+const uploadCloud = require("../config/cloudnary");
 
-const EmployeeDAO = require("../dao/employeeDAO")
+// const { path } = require("../app");
 
 // const EmployeeValidation = require("../validation/employee");
 
 class EmployeeController {
   static async apiGetEmployees(req, res) {
     // console.log("Alol");
-    const { page = 1, limit = 10, ...rest } = req.query;
+    const { page = 1, limit = 20, ...rest } = req.query;
     const query = {
       page,
       limit,
       ...rest,
       org: req.query.org || req.query.orgId || req.org,
     };
-    console.log(query);
+    // console.log(query);
     const result = await EmployeeDAO.getEmployees(query);
     if (result.error) {
       return res
@@ -30,11 +37,11 @@ class EmployeeController {
   }
 
   static async apiGetEmployeeById(req, res) {
-    const result = await EmployeeDAO.getEmployeeById(req.params.id);
-    if (result.error) {
+    const result = await EmployeeDAO.getEmployeeById({ id: req.params.id });
+    if (!(result && result !== "null" && result !== "undefined")) {
       return res
-        .status(result.server ? 500 : 400)
-        .json({ success: false, error: result.server ? null : result.error });
+        .status(500)
+        .json({ success: false, error: "something went wrong" });
     }
     return res.json({
       success: true,
@@ -56,18 +63,62 @@ class EmployeeController {
   }
 
   static async apiCreateEmployee(req, res) {
-    // Employee validation
-    // const { valid, errors } = await Joi.validate(req.body, EmployeeValidation);
-
-    // if (!valid || Object.keys(errors).length > 0) {
-    //   return res
-    //     .status(400)
-    //     .json({ success: false, error: Object.values(errors).join(", ") });
-    // }
+    const { isAttendanceRequired, deductCostShare } = req.body;
+    const files = req.files;
+    // const paths = files.map(file => file.path);
+    // var importedata = paths.length > 1 ? {
+    //   cv: String(String(paths[0]).split(".")[1]).toUpperCase() == "PDF" ? paths[0] : paths[1],
+    //   image: String(String(paths[0]).split(".")[1]).toUpperCase() == "PDF" ? paths[1] : paths[0],
+    // } : paths[0];
+    // console.log(files);
+    // const importedata =
+    // console.log(importedata)
+    // if (paths.length < 2 && String(String(paths[0]).split(".")[1]).toUpperCase() != "PDF") {
+    //   return res.status(500).json({
+    //     success: false,
+    //     message: "Employee Cv is mandatory!. add as pdf only."
+    //   });
+    // ProductData.image = uploadCheck.url;
+    const cv = req.files.cv ? req.files.cv[0].filename : "";
+    const image = req.files.image ? req.files.image[0].filename : "";
+    console.log(cv,image);
+    if (!cv) {
+      return res.status(500).json({
+        success: false,
+        message: "Employee Cv is mandatory!.",
+      });
+    }
+    const isPDF = cv ? cv.split(".")[1].toUpperCase() : false;
+    const isImage = image ? image.split(".")[1].toUpperCase() : false;
+    if (isPDF != "PDF") {
+      return res.status(500).json({
+        success: false,
+        message: "Employee Cv is pdf only!",
+      });
+    }
+    const imageTypes = ["PNG", "JPEG", "GIF", "JPG"];
+    if (isImage && !imageTypes.includes(isImage)) {
+      return res.status(500).json({
+        success: false,
+        message: "Employee profile is valid image files only!",
+      });
+    }
+    
+    const uploadCV = await uploadCloud(cv);
+    const uploadImage = await uploadCloud(image);
+    console.log(uploadCV,cv,uploadImage,image)
 
     const result = await EmployeeDAO.createEmployee({
-      org: req.org,
+      org: String(req.org),
       ...req.body,
+      cv:uploadCV.url? uploadCV.url :"",
+      image:uploadImage.url? uploadImage.url:"",
+      isAttendanceRequired: req.body.isAttendanceRequired
+        ? req.body.isAttendanceRequired
+        : true,
+      deductCostShare: req.body.deductCostShare
+        ? req.body.deductCostShare
+        : false,
     });
 
     if (result.error) {
@@ -75,20 +126,23 @@ class EmployeeController {
         .status(result.server ? 500 : 400)
         .json({ success: false, error: result.server ? null : result.error });
     } else {
-      const employee = await EmployeeDAO.getEmployeeById(result.ops[0]);
-
+      const employee = await EmployeeDAO.getEmployeeById(result.insertedId);
       return res.status(201).json({
         success: true,
-        employee,
         message: "New employee profile created",
+        employee,
       });
     }
   }
 
   static async apiUploadEmployeeImage(req, res) {
+    // console.log(req.file);
+    const vb = req.file;
+    console.log(vb);
     const result = await EmployeeDAO.uploadEmployeeImage({
       _id: req.params.id,
       ...req.body,
+      image: vb.path,
     });
 
     console.log(result);
@@ -108,6 +162,38 @@ class EmployeeController {
   }
 
   static async apiUpdateEmployee(req, res) {
+  
+     const cv = req.files.cv ? req.files.cv[0].filename : "";
+     const image = req.files.image ? req.files.image[0].filename : "";
+     // console.log(req.files.cv[0]);
+     const isPDF = cv ? cv.split(".")[1].toUpperCase() : false;
+     const isImage = image ? image.split(".")[1].toUpperCase() : false;
+     if (isPDF && isPDF != "PDF") {
+       return res.status(500).json({
+         success: false,
+         message: "Employee Cv is pdf only!",
+       });
+     }
+     const imageTypes = ["PNG", "JPEG", "GIF", "JPG"];
+     if (isImage && !imageTypes.includes(isImage)) {
+       return res.status(500).json({
+         success: false,
+         message: "Employee profile is valid image files only!",
+       });
+     }
+    // const cvChange = { "cv": cv };
+    // const imageChange = { "image": image };
+    console.log(cv, image);
+    if (cv) {
+      const uploadCV = await uploadCloud(cv);
+      console.log(uploadCV)
+      req.body.cv = uploadCV.url?uploadCV.url:"";
+    }
+    if (image) {
+      const uploadImage = await uploadCloud(image);
+      console.log(uploadImage);
+      req.body.image = uploadImage.url? uploadImage.url :"";
+    }
     const result = await EmployeeDAO.updateEmployee({
       _id: req.params.id,
       ...req.body,
@@ -172,7 +258,7 @@ class EmployeeController {
       firstName: { $in: [nameLower, nameUpper] },
       org: req.org,
     };
-    console.log(info)
+    console.log(info);
     const result = await EmployeeDAO.getEmployee(info);
     console.log(result);
     if (!result) {
@@ -186,24 +272,53 @@ class EmployeeController {
     });
   }
   static async apiFilterEmployees(req, res) {
-    const data = req.body;
+    const data = req.query;
     let info = { org: String(req.org) };
     for (let i in data) {
       if (data[i]) {
         info[i] = data[i];
       }
     }
-    console.log(info)
+    // console.log(info)
     const result = await EmployeeDAO.filterEmployee(info);
     if (!result) {
       return res
         .status(404)
         .json({ success: false, message: "Employee Not Found" });
     }
+
+    console.log(Array.isArray(result));
+
     return res.json({
       success: true,
       employee: Array.isArray(result) ? result[0] : result,
     });
+    // // return result
+  }
+
+  static async downloadFile(req, res) {
+    // const data = req.query;
+    // 
+    try {
+      const filename = 'Resume.pdf';
+      const filepath = 'public/employees/Resume.pdf';
+      console.log(filename, filepath);
+      const stream = fs.createReadStream(filepath);
+      console.log(stream)
+      const headerST = {
+        "Content-Disposition": "attachment; filename=Resume.pdf",
+        "Content/type": "application/json"
+      };
+      console.log(headerST);
+      res.set(headerST);
+      
+      console.log('--')
+      console.log(res);
+      stream.pipe(res);
+      console.log("Done")
+    } catch (err) {
+      console.log("WEF",err); // // // return result
+    }
   }
   static async apiImportEmployees(req, res) {}
   static async apiExportEmployees(req, res) {}

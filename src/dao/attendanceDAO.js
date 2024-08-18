@@ -1,11 +1,12 @@
 const { performance } = require("perf_hooks");
-
+const readXlsxFile = require('read-excel-file/node')
 const chalk = require("chalk");
 const ObjectsToCsv = require("objects-to-csv");
 const { readFile } = require("fs").promises;
 const fs = require("fs");
 const csv = require("csv-parser");
 const { ObjectID, ObjectId } = require("mongodb");
+const OrgDAO = require("./orgDAO");
 const path = require("path");
 const {
   DEFAULT_ATTENDANCE_POLICY,
@@ -14,10 +15,11 @@ const {
 } = require("../constants");
 const { computePayableHours } = require("../lib/computePayableHours");
 
-const OrgDAO = require("./orgDAO");
+// const OrgDAO = require("./orgDAO");
 const EmployeeDAO = require("./employeeDAO");
 const PayrollDateDAO = require("./payrollDateDAO");
-const { func, date } = require("joi");
+const { func, date, string } = require("joi");
+const { min } = require("moment");
 
 let attendances;
 
@@ -32,11 +34,48 @@ let attendances;
  * @property {String} device
  */
 
-function getRemark(t) {
-  return t <=
-    new Date(`${new Date(t).toISOString().slice(0, 10)} 08:30 AM`).getTime()
-    ? "present"
-    : "late";
+function getRemark(policy) {
+  const t = Date.now();
+  const date = new Date(t).getDay();
+  let remark;
+  const present = policy[date]
+  console.log(t,date,present)
+  const { workStartTime } = present.workHours ;
+  const { workEndTime } = present.workHours;
+  const a =
+    new Date(
+    `${new Date(t).toISOString().slice(0, 10)} ${workStartTime}`
+  ).getTime();
+
+  const b = new Date(
+    `${new Date(t).toISOString().slice(0, 10)} ${workEndTime}`
+  ).getTime();
+  var dates = new Date();
+  const minutes =
+    dates.getMinutes() <= 9 ? `0${dates.getMinutes()}` : dates.getMinutes();
+    var checkinTime = dates.getHours()+3 + ":" + minutes + ":" + dates.getSeconds();
+
+  const j =  new Date(`${new Date(t).toISOString().slice(0, 10)} ${checkinTime}`).getTime();
+
+  // console.log(workStartTime, workEndTime,checkinTime)
+  // console.log("-----")
+  // console.log(t, a, b,j);
+  // console.log("-----")
+  // console.log(t <= workStartTime , j<= workStartTime)
+  // console.log(t>workStartTime,t<=workEndTime,"----", j>workStartTime,j<=workEndTime)
+
+   if ( j <=
+       new Date(`${new Date(t).toISOString().slice(0, 10)} ${workStartTime}`).getTime()
+   ) {
+     return [t,"present"];
+   } else if (
+     (j > new Date(`${new Date(t).toISOString().slice(0, 10)} ${workStartTime}`).getTime()) &&
+     (j <=new Date(`${new Date(t).toISOString().slice(0, 10)} ${workEndTime}`).getTime())
+   ) {
+     return [t,"late"];
+   } else {
+     return [t,"absent"];
+   }
 }
 
 class AttendanceDAO {
@@ -403,17 +442,29 @@ class AttendanceDAO {
       }
 
       const date = extractDateString(time);
+      /// Get Attendance Policy
+      const policy = await OrgDAO.getAttendancePolicy(orgId);
+      const attend = Object.values(policy);
+      const isCheckin = await attendances.findOne({
+        orgId,
+        employeeId,
+        date,
+      });
+      console.log(attend)
 
-      if (await attendances.findOne({ orgId, employeeId, date })) {
+      if (isCheckin) {
         return { error: "Employee already checked in!" };
       }
+
+      const [times,remarks ]= getRemark(attend);
+      console.log([times,remarks]);
 
       await attendances.insertOne({
         orgId,
         employeeId,
         date,
-        checkin: time,
-        remark: getRemark(time),
+        checkin: times,
+        remark: remarks,
         device,
         status: "pending",
       });
@@ -436,7 +487,6 @@ class AttendanceDAO {
       }
 
       const query = { orgId, employeeId, date };
-      const update = { $set: { checkout: time, device } };
 
       // TODO: compute attendance hours
 
@@ -444,10 +494,24 @@ class AttendanceDAO {
       // Add attended hours to payroll date
       const result = await attendances.findOne(query);
       console.log(result);
+      const checkin = result ? result.checkin : 0;
+      var difference = time - checkin;
+      
+      var hoursDifference = Math.floor(difference/1000/60/60);
+      difference -= hoursDifference * 1000 * 60 * 60
+      var minsDifference = Math.floor(difference/1000/60);
+      difference -= minsDifference * 1000 * 60 
+      var minComp = minsDifference / 60;
+      var workedHours = hoursDifference + minComp;
+      const wh = (x) => Math.round(x * 100) / 100;
+      const update = { $set: { checkout: time, device, workedHours: wh(workedHours) } };
+
+
       if (!result) {
         return { error: "You should checkin first!" };
       }
-      // console.log(computeHours(Date.now()-result.checkin))
+      // console.log(update,typeof f,typeof workedHours)
+      // console.log(workedHours,difference,hoursDifference,minsDifference,checkin, time);
       if (computeHours(Date.now() - result.checkin) < 1) {
         return { error: "You need to wait for at least an hour to checkout!" };
       }
@@ -478,6 +542,7 @@ class AttendanceDAO {
       // TODO: implementation of org based attendance
       const {
         orgId,
+        org,
         employees = [],
         fromDate,
         toDate,
@@ -486,18 +551,21 @@ class AttendanceDAO {
       } = filterCriteria;
 
       let query = {
-        orgId: String(orgId) || ObjectID(orgId),
+        orgId: ObjectId(orgId || org) || String(orgId),
         date: {
-          $gte: fromDate ? String(fromDate) : extractDateString(new Date()),
-          $lte: toDate ? String(toDate) : extractDateString(new Date()),
+          $gte: fromDate
+            ? extractDateString(fromDate)
+            : extractDateString(new Date()),
+          $lte: toDate
+            ? extractDateString(toDate)
+            : extractDateString(new Date()),
         },
       };
-
-      console.log(query);
 
       if (employees.length > 0) {
         query.employeeId = { $in: employees };
       }
+      console.log(query);
 
       // const pipeline = [
       //   { $match: query },
@@ -544,7 +612,107 @@ class AttendanceDAO {
       //   : attendancePolicy;
       //
       // }
-      console.log(result);
+      // console.log(result);
+      return (
+        result
+          //   .map((attendance) => {
+          //     const day = new Date(attendance.checkin).getDay();
+          //     const { workedHours, overtimeHours } = computePayableHours(
+          //       attendance,
+          //       attendancePolicy[DAYS_OF_WEEK[day]].workHours
+          //     );
+
+          //     console.log("Worked hours: ", workedHours);
+          //     console.log("Overtime hours: ", overtimeHours);
+
+          //     return {
+          //       ...attendance,
+          //       workedHours,
+          //       overtimeHours,
+          //     };
+          //   })
+          .reduce((prev, next) => {
+            let attendanceList = prev[next.date];
+            if (attendanceList && Array.isArray(attendanceList)) {
+              attendanceList.push(next);
+            } else {
+              attendanceList = [next];
+            }
+            return Object.assign({}, prev, { [next.date]: attendanceList });
+          }, {})
+      );
+    } catch (e) {
+      console.error(
+        chalk.redBright(`Unable to fetch all attendance records, ${e.stack}`)
+      );
+      return { error: e, server: true };
+    }
+  }
+  static async getAllAttendances(filterCriteria) {
+    try {
+      // TODO: implementation of org based attendance
+      const { orgId, org, date } = filterCriteria;
+
+      let query = {
+        orgId: ObjectId(orgId) || string(orgId),
+        date: date ? date : { $exists: true },
+        employeeId: false ? true : { $exists: true },
+        // checkin: { $exists: true },
+        // status:{$exists:true}
+      };
+
+      console.log(query);
+
+      // if (employees.length > 0) {
+      //   query.employeeId = { $in: employees };
+      // }
+
+      // const pipeline = [
+      //   { $match: query },
+      //   {
+      //     $lookup: {
+      //       from: "employees",
+      //       let: { id: { $toObjectId: "$employeeId" } },
+      //       pipeline: [
+      //         {
+      //           $match: {
+      //             _id: "$$id",
+      //             org: org ? ObjectID(org) : { $exists: true },
+      //           },
+      //         },
+      //         {
+      //           $project: { firstName: 1, surName: 1, lastName: 1 },
+      //         },
+      //       ],
+      //       as: "employee",
+      //     },
+      //   },
+      // ];
+      // const result = await attendances.aggregate(pipeline).toArray();
+
+      const result = await attendances.find(query).toArray();
+      console.log("Attendance result: ", result.length);
+      // let attendancePolicy = DEFAULT_ATTENDANCE_POLICY;
+
+      // if (orgId) {
+      //   // const { attendancePolicy /*, holidaySchedule */ } = await OrgDAO.getOrgById(req.org);
+      //   const org = await OrgDAO.getOrgById(orgId);
+      //   attendancePolicy = Object.assign(
+      //     {},
+      //     attendancePolicy,
+      //     org.attendancePolicy
+      //   );
+      // }
+
+      // attendancePolicy = Array.isArray(attendancePolicy)
+      //   ? attendancePolicy.reduce(
+      //       (prev, next) => Object.assign({}, prev, next),
+      //       {}
+      //     )
+      //   : attendancePolicy;
+      //
+      // }
+      // console.log(result);
       return (
         result
           //   .map((attendance) => {
@@ -587,12 +755,12 @@ class AttendanceDAO {
       const {
         orgId,
         employees = [],
-        today = extractDateString(new Date()),
+        today = extractDateString(new Date()),cl
       } = filterCriteria;
-      // console.log(orgId);
+      console.log(orgId, today);
 
       let query = {
-        orgId: String(orgId),
+        orgId: ObjectId(orgId),
         date: today,
       };
 
@@ -742,44 +910,43 @@ class AttendanceDAO {
 
   static async importAttendance(fileInfo) {
     try {
-      const { filename } = fileInfo;
-      console.log(filename);
+      const { filename ,orgId} = fileInfo;
+      console.log(filename.path,orgId);
       const results = [];
       var Alldata = [];
-      fs.createReadStream(filename)
-        .pipe(csv({}))
-        .on("data", (data) => results.push(data))
-        .on(
-          "end",
-          async () => {
-            for (const result of results) {
-              const {
-                date,
-                employeeId,
-                checkin,
-                device,
-                orgId,
-                remark,
-                status,
-                checkout,
-              } = result;
-              Alldata.push({
-                date,
-                employeeId,
-                checkin,
-                device,
-                orgId,
-                remark,
-                status,
-                checkout,
-              });
-            }
-            // console.log(Alldata);
-            return await attendances.insertMany(Alldata);
-          }
-          // //  console.log(result);
-        );
-      // console.log(Alldata)
+      readXlsxFile(fs.createReadStream(filename.path)).then(async(rows) => {
+        // `rows` is an array of rows
+        // each row being an array of cells.
+        const [j, ...rest] = rows;
+        for (const dat of rest) {
+          const [a, b, c, d, e, f, g, h] = dat;
+          const current = {
+            date: a,
+            employeeId: b,
+            checkin: d,
+            checkout: e,
+            orgId,
+            workedHours: f,
+            remark: g,
+            status: h,
+          };
+          // console.log(current);
+          Alldata.push({
+            date: a,
+            employeeId: b,
+            checkin: d,
+            checkout: e,
+            orgId,
+            workedHours: f,
+            remark: g,
+            status: h,
+          });
+          // console.log("-----");
+        }
+        // console.log(Alldata, Alldata.length);
+        return await attendances.insertMany(Alldata);
+      });
+      // console.log(Alldata,'=',Alldata.length)
       return true;
     } catch (e) {
       console.error(
@@ -800,7 +967,7 @@ class AttendanceDAO {
         console.log(fileInfo);
         const csv = new ObjectsToCsv(data);
         await csv.toDisk(
-          path.join(__dirname, "../uploads/attendance/", fileInfo)
+          path.join(__dirname, "../../uploads/attendance", fileInfo)
         );
         return true;
       } else {
@@ -833,6 +1000,31 @@ class AttendanceDAO {
       return result;
     } catch (err) {
       console.error(chalk.redBright(`Unable to generate attendance , ${e}`));
+      return { error: e, server: true };
+    }
+  }
+  static async getDailyReport(filterCriteria = {}) {
+    try {
+      const { orgId } = filterCriteria;
+      const today = new Date().toJSON().slice(0, 10).replace(/-/g, "-");
+      let query = {
+        orgId: ObjectId(orgId),
+        date: today,
+      };
+      console.log(query);
+      const result = await attendances
+        .aggregate(
+          { $match: query },
+          { $group: { _id: "$remark", count: { $sum: 1 } } },
+          { $project: { remark: "$_id", count: 1 } }
+        )
+        .toArray();
+      // const resl = await attendances.find(query).toArray();
+      console.log(result);
+      return result;
+      // return resl;
+    } catch (e) {
+      console.error(chalk.redBright(`Unable to get attendance report, ${e}`));
       return { error: e, server: true };
     }
   }
@@ -923,5 +1115,7 @@ function extractDateString(date) {
 function extractTimeString(date) {
   return new Date(date).toISOString().slice(11, 19);
 }
-
+function extractDateTimeString(date) {
+  return new Date(date).toISOString();
+}
 module.exports = AttendanceDAO;

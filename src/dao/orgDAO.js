@@ -1,5 +1,5 @@
 const chalk = require("chalk");
-const { ObjectID } = require("mongodb");
+const { ObjectID,ObjectId } = require("mongodb");
 
 const getSlug = require("../utils/getSlug");
 const { DEFAULT_ATTENDANCE_POLICY } = require("../constants");
@@ -171,6 +171,24 @@ class OrgDAO {
     }
   }
 
+  static async checkDuplicateEmailOrPhone(orgEmail, phone) {
+    try {
+      const checkDuplicateEmailOrPhone = await orgs.findOne( { $or: [{ email:orgEmail}, { phone: phone } ] });
+
+      return checkDuplicateEmailOrPhone;
+
+      // return (
+      //   (await orgs.findOne({ email })) ||
+      //   (phone && (await orgs.findOne({ phone })))
+      // );
+    } catch (e) {
+      console.error(
+        chalk.redBright(`Error checking duplicate email or phone, ${e.stack}`)
+      );
+      return { error: e, server: true };
+    }
+  }
+
   static async getOrgs({ page, limit, ...rest } = {}) {
     try {
       let query = { ...rest };
@@ -242,7 +260,7 @@ class OrgDAO {
 
   static async getOrgById(orgId) {
     try {
-      let query = { _id: ObjectID(orgId) };
+      let query = { _id: ObjectId(orgId) };
       const pipeline = [
         { $match: query },
         {
@@ -327,7 +345,7 @@ class OrgDAO {
   static async updateOrg(orgInfo) {
     try {
       const { _id, slug, ...rest } = orgInfo;
-      let query = { _id: ObjectID(_id) };
+      let query = { _id: ObjectId(_id) };
       let update = { $set: { ...rest } };
       return await orgs.updateOne(query, update);
     } catch (e) {
@@ -339,7 +357,7 @@ class OrgDAO {
   static async deleteOrg(orgId) {
     try {
       // TODO: delete all employees, departments, positions, policies, users, etc
-      let query = { _id: ObjectID(orgId) };
+      let query = { _id: ObjectId(orgId) };
       return await orgs.deleteOne(query);
     } catch (e) {
       console.error(chalk.redBright(`Error deleting org record, ${e}`));
@@ -359,7 +377,7 @@ class OrgDAO {
 
   static async getAttendancePolicy(id) {
     try {
-      let query = { _id: ObjectID(id) };
+      let query = { _id: ObjectId(id) };
       const result = await orgs.findOne(query);
       return result.attendancePolicy;
     } catch (e) {
@@ -372,7 +390,7 @@ class OrgDAO {
 
   static async updateAttendancePolicy(id, attendancePolicy) {
     try {
-      let query = { _id: ObjectID(id) };
+      let query = { _id: ObjectId(id) };
       let update = {
         $set: {
           attendancePolicy: {
