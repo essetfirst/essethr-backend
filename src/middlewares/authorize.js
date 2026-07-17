@@ -1,25 +1,24 @@
-// const { UserDAO } = require("../dao");
+const { normalizeRoleKey } = require("../constants/systemRoles");
 
-const authorize = (role) => async (req, res, next) => {
-  let roles = Array.isArray(role) ? role : [role];
-  // if (!req.user) {
-  //   const result = await UserDAO.getUserById(req.userId || req.user._id);
-  //   if (result.error) {
-  //     return res.status(result.server ? 500 : 400).json({
-  //       success: false,
-  //       error: result.server ? "Something went wrong" : result.error,
-  //     });
-  //   }
-  // }
+/**
+ * Legacy role guard — prefer requirePermission for new code.
+ */
+const authorize = (role) => (req, res, next) => {
+  const roles = Array.isArray(role) ? role : [role];
+  const userRole = normalizeRoleKey(req.user?.role);
 
-  const isAuthorized = roles.includes(user.role);
+  if (!req.user) {
+    return res.status(401).json({ success: false, error: "Authentication required." });
+  }
 
-  if (!isAuthorized) {
+  const normalizedAllowed = roles.map((r) => normalizeRoleKey(r));
+  if (!normalizedAllowed.includes(userRole)) {
     return res.status(403).json({
       success: false,
-      error: "You dont have the required previledge!",
+      error: "You do not have the required privilege.",
     });
   }
+
   next();
 };
 

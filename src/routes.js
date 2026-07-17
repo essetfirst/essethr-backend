@@ -1,0 +1,64 @@
+const router = require("express").Router();
+
+const authenticate = require("./middlewares/authenticate");
+const resolveOrgContext = require("./middlewares/resolveOrgContext");
+const { authRateLimiter } = require("./middlewares/rateLimiter");
+
+const signupRoutes = require("./features/users/signup.route");
+const authRoutes = require("./features/users/auth.route");
+const userRoutes = require("./features/users/user.route");
+
+const orgRoutes = require("./features/org/org.route");
+const employeeRoutes = require("./features/employees/employee.route");
+const attendanceRoutes = require("./features/attendance/attendance.route");
+const leaveRoutes = require("./features/leaves/leaves.route");
+const payrollRoutes = require("./features/payroll/payroll.route");
+const auditRoutes = require("./features/audit/audit.route");
+const documentRoutes = require("./features/documents/document.route");
+const announcementRoutes = require("./features/announcements/announcement.route");
+const shiftRoutes = require("./features/shifts/shift.route");
+const workflowRoutes = require("./features/workflows/workflow.route");
+const recruitmentRoutes = require("./features/recruitment/recruitment.route");
+const onboardingRoutes = require("./features/onboarding/onboarding.route");
+const offboardingRoutes = require("./features/offboarding/offboarding.route");
+const performanceRoutes = require("./features/performance/performance.route");
+const trainingRoutes = require("./features/training/training.route");
+const essRoutes = require("./features/ess/ess.route");
+const analyticsRoutes = require("./features/analytics/analytics.route");
+const notificationRoutes = require("./features/notifications/notification.route");
+const payslipRoutes = require("./features/payroll/payslip.route");
+const searchRoutes = require("./features/search/search.route");
+const inboxRoutes = require("./features/inbox/inbox.route");
+const reportRoutes = require("./features/reports/report.route");
+const benefitsRoutes = require("./features/benefits/benefits.route");
+const expensesRoutes = require("./features/expenses/expenses.route");
+
+router.use("/", signupRoutes);
+router.use("/auth", authRateLimiter, authRoutes);
+router.use("/users", authRateLimiter, userRoutes);
+router.use("/orgs", authenticate, resolveOrgContext, orgRoutes);
+router.use("/employees", authenticate, resolveOrgContext, employeeRoutes);
+router.use("/attendance", authenticate, resolveOrgContext, attendanceRoutes);
+router.use("/leaves", authenticate, resolveOrgContext, leaveRoutes);
+router.use("/payrolls", authenticate, resolveOrgContext, payrollRoutes);
+router.use("/payslips", authenticate, resolveOrgContext, payslipRoutes);
+router.use("/audit-logs", authenticate, resolveOrgContext, auditRoutes);
+router.use("/documents", authenticate, resolveOrgContext, documentRoutes);
+router.use("/announcements", authenticate, resolveOrgContext, announcementRoutes);
+router.use("/shifts", authenticate, resolveOrgContext, shiftRoutes);
+router.use("/workflows", authenticate, resolveOrgContext, workflowRoutes);
+router.use("/recruitment", authenticate, resolveOrgContext, recruitmentRoutes);
+router.use("/onboarding", authenticate, resolveOrgContext, onboardingRoutes);
+router.use("/offboarding", authenticate, resolveOrgContext, offboardingRoutes);
+router.use("/performance", authenticate, resolveOrgContext, performanceRoutes);
+router.use("/training", authenticate, resolveOrgContext, trainingRoutes);
+router.use("/ess", authenticate, resolveOrgContext, essRoutes);
+router.use("/analytics", authenticate, resolveOrgContext, analyticsRoutes);
+router.use("/notifications", authenticate, resolveOrgContext, notificationRoutes);
+router.use("/search", authenticate, resolveOrgContext, searchRoutes);
+router.use("/inbox", authenticate, resolveOrgContext, inboxRoutes);
+router.use("/reports", authenticate, resolveOrgContext, reportRoutes);
+router.use("/benefits", authenticate, resolveOrgContext, benefitsRoutes);
+router.use("/expenses", authenticate, resolveOrgContext, expensesRoutes);
+
+module.exports = router;
